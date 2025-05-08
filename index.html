@@ -250,7 +250,12 @@ db.ref('tasks/' + id).set(status);
       });
     }
 
-    broadcast.onmessage = (event) => {
+    db.ref('tasks').on('value', snapshot => {
+const data = snapshot.val() || {};
+Object.keys(data).forEach(id => {
+updateTaskUI(id, data[id]);
+});
+});
       const { id, status } = event.data;
       localStorage.setItem(id, status);
       updateTaskUI(id, status);
