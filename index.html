@@ -175,20 +175,23 @@
     }
 
     function toggleTask(checkbox, id) {
-      if (checkbox.checked) {
-        syncTask(id, 'pending');
-        updateTaskUI(id, 'pending');
-      } else {
+  const status = checkbox.checked ? 'pending' : '';
+  syncTask(id, status);
+  updateTaskUI(id, status);
+} else {
         syncTask(id, '');
         updateTaskUI(id, '');
       }
     }
 
     function approveTask(id) {
-      if (!isParent) {
-        alert('Only parents can approve tasks. Add ?user=parent to the URL.');
-        return;
-      }
+  if (!isParent) {
+    alert('Only parents can approve tasks. Add ?user=parent to the URL.');
+    return;
+  }
+  syncTask(id, 'approved');
+  updateTaskUI(id, 'approved');
+}
       syncTask(id, 'approved');
       updateTaskUI(id, 'approved');
     }
@@ -251,10 +254,12 @@
     }
 
     broadcast.onmessage = (event) => {
-      const { id, status } = event.data;
-      localStorage.setItem(id, status);
-      updateTaskUI(id, status);
-    };
+  const { id, status } = event.data;
+  if (id && typeof status === 'string') {
+    localStorage.setItem(id, status);
+    updateTaskUI(id, status);
+  }
+};
 
     document.addEventListener('DOMContentLoaded', () => {
       renderChores();
