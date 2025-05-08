@@ -175,23 +175,16 @@
     }
 
     function toggleTask(checkbox, id) {
-  const status = checkbox.checked ? 'pending' : '';
-  syncTask(id, status);
-  updateTaskUI(id, status);
-} else {
-        syncTask(id, '');
-        updateTaskUI(id, '');
-      }
+      const status = checkbox.checked ? 'pending' : '';
+      syncTask(id, status);
+      updateTaskUI(id, status);
     }
 
     function approveTask(id) {
-  if (!isParent) {
-    alert('Only parents can approve tasks. Add ?user=parent to the URL.');
-    return;
-  }
-  syncTask(id, 'approved');
-  updateTaskUI(id, 'approved');
-}
+      if (!isParent) {
+        alert('Only parents can approve tasks. Add ?user=parent to the URL.');
+        return;
+      }
       syncTask(id, 'approved');
       updateTaskUI(id, 'approved');
     }
@@ -207,37 +200,33 @@
         names.forEach(name => {
           const cell = document.createElement('td');
           const tasks = chores[day][name];
-          if (tasks.length === 0) {
-            cell.innerHTML = '<em>Free</em>';
-          } else {
-            tasks.forEach((task, i) => {
-              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
-              const wrapper = document.createElement('div');
-              wrapper.className = 'task';
+          tasks.forEach((task, i) => {
+            const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'task';
 
-              const label = document.createElement('label');
-              const checkbox = document.createElement('input');
-              checkbox.type = 'checkbox';
-              checkbox.id = `${id}-checkbox`;
-              checkbox.onchange = () => toggleTask(checkbox, id);
-              label.appendChild(checkbox);
-              label.append(` ${task}`);
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `${id}-checkbox`;
+            checkbox.onchange = () => toggleTask(checkbox, id);
+            label.appendChild(checkbox);
+            label.append(` ${task}`);
 
-              const status = document.createElement('span');
-              status.id = `${id}-status`;
+            const status = document.createElement('span');
+            status.id = `${id}-status`;
 
-              const approveBtn = document.createElement('button');
-              approveBtn.id = `${id}-approve`;
-              approveBtn.textContent = 'Approve';
-              approveBtn.style.display = 'none';
-              approveBtn.onclick = () => approveTask(id);
+            const approveBtn = document.createElement('button');
+            approveBtn.id = `${id}-approve`;
+            approveBtn.textContent = 'Approve';
+            approveBtn.style.display = 'none';
+            approveBtn.onclick = () => approveTask(id);
 
-              wrapper.appendChild(label);
-              wrapper.appendChild(status);
-              wrapper.appendChild(approveBtn);
-              cell.appendChild(wrapper);
-            });
-          }
+            wrapper.appendChild(label);
+            wrapper.appendChild(status);
+            wrapper.appendChild(approveBtn);
+            cell.appendChild(wrapper);
+          });
           row.appendChild(cell);
         });
         tbody.appendChild(row);
@@ -254,24 +243,22 @@
     }
 
     broadcast.onmessage = (event) => {
-  const { id, status } = event.data;
-  if (id && typeof status === 'string') {
-    localStorage.setItem(id, status);
-    updateTaskUI(id, status);
-  }
-};
+      const { id, status } = event.data;
+      if (id && typeof status === 'string') {
+        localStorage.setItem(id, status);
+        updateTaskUI(id, status);
+      }
+    };
 
     document.addEventListener('DOMContentLoaded', () => {
-  renderChores();
-  updateRecycleNote();
-
-  setTimeout(() => {
-    Object.keys(localStorage).forEach(key => {
-      const status = localStorage.getItem(key);
-      if (status) updateTaskUI(key, status);
-    });
-  }, 0);
-});
+      renderChores();
+      updateRecycleNote();
+      setTimeout(() => {
+        Object.keys(localStorage).forEach(key => {
+          const status = localStorage.getItem(key);
+          if (status) updateTaskUI(key, status);
+        });
+      }, 0);
     });
   </script>
 </body>
