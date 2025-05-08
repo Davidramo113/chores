@@ -158,9 +158,8 @@ const db = firebase.database();
     const names = ["Jacob", "Jalyna", "Josh", "Jeremy"];
 
     function syncTask(id, status) {
-      localStorage.setItem(id, status);
-      broadcast.postMessage({ id, status });
-    }
+db.ref('tasks/' + id).set(status);
+}
 
     function updateTaskUI(id, status) {
       const checkbox = document.getElementById(`${id}-checkbox`);
