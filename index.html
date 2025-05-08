@@ -42,7 +42,6 @@
     <tbody id="chore-body"></tbody>
   </table>
 
-  <!-- Reset button (visible to parent only) -->
   <div style="text-align: center; margin-top: 20px;" id="reset-section">
     <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
   </div>
@@ -54,14 +53,50 @@
   <script>
     const isParent = new URLSearchParams(window.location.search).get('user') === 'parent';
     const chores = {
-      Monday: { Jacob: ["Vacuum", "Scoop litter"], Jalyna: ["Dishes"], Josh: ["Trash"], Jeremy: ["Clean bedroom"] },
-      Tuesday: { Jacob: ["Scoop litter"], Jalyna: ["Dishes"], Josh: ["Recycling"], Jeremy: ["Clean bedroom"] },
-      Wednesday: { Jacob: ["Dishes"], Jalyna: ["Surfaces", "Scoop litter"], Josh: ["Windows"], Jeremy: ["Clean bedroom"] },
-      Thursday: { Jacob: ["Basement steps"], Jalyna: ["Dishes"], Josh: ["Appliances", "Scoop litter"], Jeremy: ["Clean bedroom"] },
-      Friday: { Jacob: ["Sweep 1st floor"], Jalyna: ["Bathroom", "Scoop litter"], Josh: ["Dishes"], Jeremy: ["Clean bedroom"] },
-      Saturday: { Jacob: ["Dishes", "Scoop litter"], Jalyna: ["Organize space"], Josh: ["Organize basement"], Jeremy: ["Clean bedroom"] },
-      Sunday: { Jacob: [], Jalyna: [], Josh: [], Jeremy: [] }
+      Monday: {
+        Jacob: ["Vacuum common areas", "Scoop/clean cat litter"],
+        Jalyna: ["Wash dishes"],
+        Josh: ["Take out trash"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Tuesday: {
+        Jacob: ["Scoop/clean cat litter"],
+        Jalyna: ["Wash dishes"],
+        Josh: ["Wash dishes", "Take recycling to front curb"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Wednesday: {
+        Jacob: ["Wash dishes", "Take trash to front curb"],
+        Jalyna: ["Wipe down surfaces", "Scoop/clean cat litter"],
+        Josh: ["Clean windows"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Thursday: {
+        Jacob: ["Vacuum basement steps"],
+        Jalyna: ["Wash dishes"],
+        Josh: ["Wipe down appliances", "Scoop/clean cat litter"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Friday: {
+        Jacob: ["Dust and sweep first floor"],
+        Jalyna: ["Clean bathroom", "Scoop/clean cat litter"],
+        Josh: ["Wash dishes"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Saturday: {
+        Jacob: ["Wash dishes", "Scoop/clean cat litter"],
+        Jalyna: ["Organize shared space"],
+        Josh: ["Organize basement"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Sunday: {
+        Jacob: [],
+        Jalyna: [],
+        Josh: [],
+        Jeremy: []
+      }
     };
+
     const names = ["Jacob", "Jalyna", "Josh", "Jeremy"];
 
     function syncTask(id, status) {
@@ -175,5 +210,6 @@
   </script>
 </body>
 </html>
+
 
 
