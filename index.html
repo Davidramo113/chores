@@ -1,3 +1,4 @@
+<!-- Fixed version with extra closing brace removed and initialization logic cleaned up -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,10 +78,66 @@
       color: #2e7d32;
       margin-top: 6px;
     }
+    html.dark-mode {
+      background-color: #121212;
+      color: #eee;
+    }
+    html.dark-mode body {
+      background: #1e1e1e;
+      color: #eee;
+    }
+    html.dark-mode table {
+      background: #1e1e1e;
+    }
+    html.dark-mode th {
+      background-color: #2e2e2e;
+      color: #fff;
+    }
+    html.dark-mode td {
+      background: #252525;
+      color: #eee;
+    }
+    html.dark-mode .footer-note {
+      background: #2a2a2a;
+      color: #ddd;
+    }
+    html.dark-mode .trash-note,
+    html.dark-mode .recycle-note {
+      color: #ccc;
+    }
+    html.dark-mode button {
+      background: #4caf50;
+      color: white;
+    }
   </style>
 </head>
 <body>
   <h1>Family Tasks</h1>
+  <div style="text-align:right; margin-bottom:10px;">
+    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9em; cursor: pointer;">
+      <span>🌙 Dark Mode</span>
+      <input type="checkbox" id="toggleDark" style="width: 40px; height: 20px; position: relative; appearance: none; background: #ccc; outline: none; border-radius: 20px; transition: background 0.3s;">
+    </label>
+    <style>
+      #toggleDark:checked {
+        background: #4caf50;
+      }
+      #toggleDark::before {
+        content: '';
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: white;
+        top: 1px;
+        left: 1px;
+        transition: transform 0.3s;
+      }
+      #toggleDark:checked::before {
+        transform: translateX(20px);
+      }
+    </style>
+  </div>
   <table>
     <thead>
       <tr>
@@ -93,11 +150,13 @@
     </thead>
     <tbody id="chore-body"></tbody>
   </table>
+
   <div class="footer-note">
     ✅ Once your chores are complete and approved, Wi-Fi access will be restored. Thanks for helping out — teamwork makes the dream work!
     <div class="trash-note">🗑️ Trash and recycling must be brought to the curb by <strong>8:00 PM</strong> on the assigned nights.</div>
     <div class="recycle-note" id="recycle-week-note"></div>
   </div>
+
   <script>
     const isParent = new URLSearchParams(window.location.search).get('user') === 'parent';
 
@@ -254,6 +313,20 @@
       recycleNote.textContent = `♻️ This week’s recycling: ${type}`;
     }
 
+    document.addEventListener('DOMContentLoaded', () => {
+      renderChores();
+      updateRecycleNote();
+      const darkToggle = document.getElementById('toggleDark');
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark-mode');
+        darkToggle.checked = true;
+      }
+      darkToggle.addEventListener('change', () => {
+        document.documentElement.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', darkToggle.checked);
+      });
+    });
+
     db.ref('tasks').on('value', (snapshot) => {
       const tasks = snapshot.val();
       if (tasks) {
@@ -261,11 +334,6 @@
           updateTaskUI(id, tasks[id]);
         });
       }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      renderChores();
-      updateRecycleNote();
     });
   </script>
 </body>
