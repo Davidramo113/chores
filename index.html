@@ -262,11 +262,16 @@
 };
 
     document.addEventListener('DOMContentLoaded', () => {
-      renderChores();
-      updateRecycleNote();
-      Object.keys(localStorage).forEach(key => {
-        updateTaskUI(key, localStorage.getItem(key));
-      });
+  renderChores();
+  updateRecycleNote();
+
+  setTimeout(() => {
+    Object.keys(localStorage).forEach(key => {
+      const status = localStorage.getItem(key);
+      if (status) updateTaskUI(key, status);
+    });
+  }, 0);
+});
     });
   </script>
 </body>
