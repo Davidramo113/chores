@@ -242,18 +242,29 @@
       recycleNote.textContent = `♻️ This week’s recycling: ${type}`;
     }
 
-    broadcast.onmessage = (event) => {
-      const { id, status } = event.data;
-      if (id && typeof status === 'string') {
-        localStorage.setItem(id, status);
-        updateTaskUI(id, status);
-      }
-    };
+    const pendingUpdates = [];
+
+broadcast.onmessage = (event) => {
+  const { id, status } = event.data;
+  if (id && typeof status === 'string') {
+    localStorage.setItem(id, status);
+    pendingUpdates.push({ id, status });
+  }
+};
 
     document.addEventListener('DOMContentLoaded', () => {
-      renderChores();
-      updateRecycleNote();
-      setTimeout(() => {
+  renderChores();
+  updateRecycleNote();
+
+  setTimeout(() => {
+    Object.keys(localStorage).forEach(key => {
+      const status = localStorage.getItem(key);
+      if (status) updateTaskUI(key, status);
+    });
+
+    pendingUpdates.forEach(({ id, status }) => {
+      updateTaskUI(id, status);
+    });
         Object.keys(localStorage).forEach(key => {
           const status = localStorage.getItem(key);
           if (status) updateTaskUI(key, status);
