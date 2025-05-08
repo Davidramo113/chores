@@ -41,6 +41,12 @@
     </thead>
     <tbody id="chore-body"></tbody>
   </table>
+
+  <!-- Reset button (visible to parent only) -->
+  <div style="text-align: center; margin-top: 20px;" id="reset-section">
+    <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
+  </div>
+
   <div class="footer-note">
     ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
   </div>
@@ -102,6 +108,14 @@
       updateTaskUI(id, "approved");
     }
 
+    function resetAllTasks() {
+      if (!isParent) return;
+      if (confirm("Are you sure you want to reset all tasks? This will remove all checkmarks and approvals.")) {
+        db.ref("tasks").remove();
+        location.reload();
+      }
+    }
+
     function renderChores() {
       const tbody = document.getElementById("chore-body");
       Object.keys(chores).forEach(day => {
@@ -161,4 +175,5 @@
   </script>
 </body>
 </html>
+
 
