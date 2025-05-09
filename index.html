@@ -30,7 +30,8 @@
       --text-dark: #fff;
       --table-light: #fff;
       --table-dark: #2a2a2a;
-      --border: #ccc;
+      --border-light: #ccc;
+      --border-dark: #555;
       --accent: green;
     }
 
@@ -58,13 +59,34 @@
     }
 
     th, td {
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-light);
       padding: 10px;
       text-align: center;
     }
 
+    body.dark th, body.dark td {
+      border: 1px solid var(--border-dark);
+    }
+
     th {
       background: #eee;
+    }
+
+    body.dark th {
+      background: #333;
+      color: var(--text-dark);
+    }
+
+    tr.highlight {
+      background-color: #dff0d8;
+    }
+
+    body.dark tr.highlight {
+      background-color: #3a553a;
+    }
+
+    body.dark tr:hover {
+      background-color: #2e2e2e;
     }
 
     .task {
@@ -223,12 +245,17 @@
 
     function toggleTheme() {
       document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
     }
 
     function renderChores() {
       const tbody = document.getElementById("chore-body");
+      const todayStr = new Date().toLocaleString('en-US', { weekday: 'long' });
+
       Object.keys(chores).forEach(day => {
         const row = document.createElement("tr");
+        if (day === todayStr) row.classList.add("highlight");
+
         const dayCell = document.createElement("td");
         dayCell.textContent = day;
         row.appendChild(dayCell);
@@ -273,47 +300,48 @@
       });
     }
 
-    db.ref("tasks").on("value", snapshot => {
-      const data = snapshot.val() || {};
-      Object.entries(data).forEach(([id, status]) => {
-        updateTaskUI(id, status);
+    document.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+      }
+
+      renderChores();
+
+      db.ref("tasks").on("value", snapshot => {
+        const data = snapshot.val() || {};
+        Object.entries(data).forEach(([id, status]) => {
+          updateTaskUI(id, status);
+        });
       });
     });
-
-    document.addEventListener("DOMContentLoaded", renderChores);
   </script>
 
-  <div class="footer-note" id="recycling-note" style="text-align: center;"></div>
-  
+  <script>
+    const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
+    const baseDate = new Date("January 1, 2025");
+    while (baseDate.getDay() !== 3) baseDate.setDate(baseDate.getDate() + 1);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const nextWednesday = new Date(today);
+    const diff = (3 - today.getDay() + 7) % 7;
+    nextWednesday.setDate(today.getDate() + diff);
+    const weeksBetween = Math.floor((nextWednesday - baseDate) / (7 * 24 * 60 * 60 * 1000));
+    const recyclingType = recyclingTypes[weeksBetween % 2];
+    const note = document.getElementById("recycling-note");
+    if (note) {
+      note.innerHTML = `♻️ Recycling Reminder: <strong>${recyclingType}</strong> will be collected on <strong>${nextWednesday.toDateString()}</strong>.<br>🕘 Garbage Reminder: All trash must be brought to the curb by <strong>9:00 PM</strong>.`;
+    }
+  </script>
 
-
-  
-<script>
-  const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-  const baseDate = new Date("January 1, 2025");
-  while (baseDate.getDay() !== 3) baseDate.setDate(baseDate.getDate() + 1);
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const nextWednesday = new Date(today);
-  const diff = (3 - today.getDay() + 7) % 7;
-  nextWednesday.setDate(today.getDate() + diff);
-  const weeksBetween = Math.floor((nextWednesday - baseDate) / (7 * 24 * 60 * 60 * 1000));
-  const recyclingType = recyclingTypes[weeksBetween % 2];
-  const note = document.getElementById("recycling-note");
-  if (note) {
-    note.innerHTML = `♻️ Recycling Reminder: <strong>${recyclingType}</strong> will be collected on <strong>${nextWednesday.toDateString()}</strong>.<br>🕘 Garbage Reminder: All trash must be brought to the curb by <strong>9:00 PM</strong>.`;
-  }
-</script>
-
-<script>
-  if (!isParent && typeof isParent !== "undefined") {
-    const linkDiv = document.createElement("div");
-    linkDiv.innerHTML = `
-  <div class="footer-note" style="text-align: center;">
-    📘 <a href="Family_Task_WiFi_Guide_With_Enforcement.pdf" target="_blank">Read the Wi-Fi & Task Rules</a>
-  </div>
-`;
-    document.body.appendChild(linkDiv);
-  }
-</script>
+  <script>
+    if (!isParent && typeof isParent !== "undefined") {
+      const linkDiv = document.createElement("div");
+      linkDiv.innerHTML = `
+    <div class="footer-note" style="text-align: center;">
+      📘 <a href="Family_Task_WiFi_Guide_With_Enforcement.pdf" target="_blank">Read the Wi-Fi & Task Rules</a>
+    </div>
+  `;
+      document.body.appendChild(linkDiv);
+    }
+  </script>
 </body>
-
+</html>
