@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Family Tasks</title>
-
-  <!-- Firebase Classic SDK (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
   <script>
@@ -21,105 +19,59 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
   </script>
-
   <style>
-    :root {
-      --bg-light: #f0f0f0;
-      --bg-dark: #1e1e1e;
-      --text-light: #000;
-      --text-dark: #fff;
-      --table-light: #fff;
-      --table-dark: #2a2a2a;
-      --border-light: #ccc;
-      --border-dark: #555;
-      --accent: green;
-    }
-
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      color: #000;
       padding: 20px;
-      background: var(--bg-light);
-      color: var(--text-light);
-      transition: background 0.3s, color 0.3s;
     }
-
     body.dark {
-      background: var(--bg-dark);
-      color: var(--text-dark);
+      background-color: #1e1e1e;
+      color: #fff;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      background: var(--table-light);
+      margin-top: 20px;
     }
-
-    body.dark table {
-      background: var(--table-dark);
-    }
-
     th, td {
-      border: 1px solid var(--border-light);
+      border: 1px solid #ccc;
       padding: 10px;
       text-align: center;
     }
-
-    body.dark th, body.dark td {
-      border: 1px solid var(--border-dark);
-    }
-
     th {
-      background: #eee;
+      background-color: #eee;
     }
-
     body.dark th {
-      background: #333;
-      color: var(--text-dark);
+      background-color: #333;
+      color: #fff;
     }
-
-    tr.highlight {
-      background-color: #dff0d8;
-    }
-
-    body.dark tr.highlight {
-      background-color: #3a553a;
-    }
-
-    body.dark tr:hover {
-      background-color: #2e2e2e;
-    }
-
     .task {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
     .approved {
-      color: var(--accent);
+      color: green;
       font-weight: bold;
     }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
+    #theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
     }
-
     .footer-note {
       margin-top: 30px;
       text-align: center;
       font-style: italic;
     }
-
-    #reset-section {
-      text-align: center;
-      margin-top: 20px;
+    tr.highlight {
+      background-color: #dff0d8;
     }
-
-    #theme-toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
+    body.dark tr.highlight {
+      background-color: #4d664d;
+      color: #fff;
     }
   </style>
 </head>
@@ -132,17 +84,21 @@
     </thead>
     <tbody id="chore-body"></tbody>
   </table>
-
-  <div id="reset-section">
-    <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
+  <div id="reset-section" style="text-align:center; margin-top:20px;">
+    <button onclick="resetAllTasks()">Reset All Tasks</button>
   </div>
-
-  <div class="footer-note" id="recycling-note" style="text-align: center;"></div>
+  <div id="recycling-note" style="text-align:center; margin-top:20px;"></div>
   <div class="footer-note">
     ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
   </div>
-
   <script>
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    const names = ["Jacob", "Jalyna", "Josh", "Jeremy"];
+    const trashRotation = ["Jacob", "Jalyna", "Josh"];
     const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
     const chores = {
       Monday: {
@@ -189,105 +145,58 @@
       }
     };
 
-    const names = ["Jacob", "Jalyna", "Josh", "Jeremy"];
-
-    function syncTask(id, status) {
-      db.ref("tasks/" + id).set(status);
-    }
-
-    function updateTaskUI(id, status) {
-      const checkbox = document.getElementById(`${id}-checkbox`);
-      const statusSpan = document.getElementById(`${id}-status`);
-      const approveBtn = document.getElementById(`${id}-approve`);
-      if (!checkbox || !statusSpan) return;
-
-      if (status === "approved") {
-        checkbox.checked = true;
-        checkbox.disabled = true;
-        statusSpan.textContent = "✅ Approved";
-        statusSpan.classList.add("approved");
-        if (approveBtn) approveBtn.style.display = "none";
-      } else if (status === "pending") {
-        checkbox.checked = true;
-        statusSpan.textContent = "Pending";
-        if (approveBtn && isParent) approveBtn.style.display = "inline-block";
-      } else {
-        checkbox.checked = false;
-        statusSpan.textContent = "";
-        if (approveBtn) approveBtn.style.display = "none";
-        checkbox.disabled = false;
-      }
-    }
-
-    function toggleTask(checkbox, id) {
-      if (checkbox.checked) {
-        syncTask(id, "pending");
-        updateTaskUI(id, "pending");
-      } else {
-        syncTask(id, "");
-        updateTaskUI(id, "");
-      }
-    }
-
-    function approveTask(id) {
-      if (!isParent) return;
-      syncTask(id, "approved");
-      updateTaskUI(id, "approved");
-    }
-
-    function resetAllTasks() {
-      if (!isParent) return;
-      if (confirm("Are you sure you want to reset all tasks?")) {
-        db.ref("tasks").remove();
-        location.reload();
-      }
-    }
-
-    function toggleTheme() {
-      document.body.classList.toggle("dark");
-      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
-    }
-
     function renderChores() {
       const tbody = document.getElementById("chore-body");
-      const todayStr = new Date().toLocaleString('en-US', { weekday: 'long' });
+      const msInWeek = 7 * 24 * 60 * 60 * 1000;
+      const rotationStart = new Date("2025-01-06");
+      const today = new Date();
+      const weekIndex = Math.floor((today - rotationStart) / msInWeek);
+      const trashAssigneeIndex = weekIndex % trashRotation.length;
+      const rotatedNames = [...names.slice(weekIndex % names.length), ...names.slice(0, weekIndex % names.length)];
+      const todayStr = today.toLocaleString('en-US', { weekday: 'long' });
 
       Object.keys(chores).forEach(day => {
         const row = document.createElement("tr");
+        const currentDate = new Date();
+        const dayIndex = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(day);
+        const diff = (dayIndex + 7 - currentDate.getDay()) % 7;
+        const displayDate = new Date(currentDate);
+        displayDate.setDate(currentDate.getDate() + diff);
+        const dateStr = displayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
         if (day === todayStr) row.classList.add("highlight");
 
         const dayCell = document.createElement("td");
-        dayCell.textContent = day;
+        dayCell.textContent = `${day} (${dateStr})`;
         row.appendChild(dayCell);
 
-        names.forEach(name => {
+        rotatedNames.forEach((rotatedName, i) => {
+          const originalName = names[i];
           const cell = document.createElement("td");
-          const tasks = chores[day][name] || [];
+          const tasks = [...(chores[day][originalName] || [])];
+          if (day !== "Sunday" && originalName === trashRotation[(trashAssigneeIndex + dayIndex) % trashRotation.length]) {
+            tasks.push("Take trash to the bins");
+          }
           if (tasks.length === 0) {
             cell.innerHTML = "<em>Free</em>";
           } else {
-            tasks.forEach((task, i) => {
-              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
+            tasks.forEach((task, t) => {
+              const id = `${day.toLowerCase()}-${originalName.toLowerCase()}-${t}`;
               const div = document.createElement("div");
               div.className = "task";
-
               const label = document.createElement("label");
               const checkbox = document.createElement("input");
               checkbox.type = "checkbox";
               checkbox.id = `${id}-checkbox`;
-              checkbox.onchange = () => toggleTask(checkbox, id);
               label.appendChild(checkbox);
               label.append(task);
-
               const status = document.createElement("span");
               status.id = `${id}-status`;
-
               const approveBtn = document.createElement("button");
               approveBtn.id = `${id}-approve`;
               approveBtn.textContent = "Approve";
               approveBtn.style.display = "none";
               approveBtn.onclick = () => approveTask(id);
-
               div.appendChild(label);
               div.appendChild(status);
               div.appendChild(approveBtn);
@@ -300,48 +209,73 @@
       });
     }
 
+    function toggleTask(checkbox, id) {
+      const status = checkbox.checked ? "pending" : "";
+      db.ref("tasks/" + id).set(status);
+    }
+
+    function approveTask(id) {
+      if (!isParent) return;
+      db.ref("tasks/" + id).set("approved");
+    }
+
+    function resetAllTasks() {
+      if (!isParent) return;
+      if (confirm("Are you sure you want to reset all tasks?")) {
+        db.ref("tasks").remove();
+        location.reload();
+      }
+    }
+
+    function updateTaskUI(id, status) {
+      const checkbox = document.getElementById(`${id}-checkbox`);
+      const statusSpan = document.getElementById(`${id}-status`);
+      const approveBtn = document.getElementById(`${id}-approve`);
+      if (!checkbox || !statusSpan) return;
+      if (status === "approved") {
+        checkbox.checked = true;
+        checkbox.disabled = true;
+        statusSpan.textContent = "✅ Approved";
+        statusSpan.classList.add("approved");
+        if (approveBtn) approveBtn.style.display = "none";
+      } else if (status === "pending") {
+        checkbox.checked = true;
+        checkbox.disabled = false;
+        statusSpan.textContent = "Pending";
+        if (approveBtn && isParent) approveBtn.style.display = "inline-block";
+      } else {
+        checkbox.checked = false;
+        checkbox.disabled = false;
+        statusSpan.textContent = "";
+        if (approveBtn) approveBtn.style.display = "none";
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       if (localStorage.getItem("theme") === "dark") {
         document.body.classList.add("dark");
       }
-
       renderChores();
-
-      db.ref("tasks").on("value", snapshot => {
+      const taskRef = db.ref("tasks");
+      taskRef.on("value", snapshot => {
         const data = snapshot.val() || {};
-        Object.entries(data).forEach(([id, status]) => {
-          updateTaskUI(id, status);
-        });
+        Object.entries(data).forEach(([id, status]) => updateTaskUI(id, status));
       });
+
+      const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
+      const baseDate = new Date("January 1, 2025");
+      while (baseDate.getDay() !== 3) baseDate.setDate(baseDate.getDate() + 1);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const nextWednesday = new Date(today);
+      const diff = (3 - today.getDay() + 7) % 7;
+      nextWednesday.setDate(today.getDate() + diff);
+      const weeksBetween = Math.floor((nextWednesday - baseDate) / (7 * 24 * 60 * 60 * 1000));
+      const recyclingType = recyclingTypes[weeksBetween % 2];
+      const note = document.getElementById("recycling-note");
+      if (note) {
+        note.innerHTML = `♻️ Recycling Reminder: <strong>${recyclingType}</strong> will be collected on <strong>${nextWednesday.toDateString()}</strong>.<br>🕘 Garbage Reminder: All trash must be brought to the curb by <strong>9:00 PM</strong>.`;
+      }
     });
-  </script>
-
-  <script>
-    const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-    const baseDate = new Date("January 1, 2025");
-    while (baseDate.getDay() !== 3) baseDate.setDate(baseDate.getDate() + 1);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const nextWednesday = new Date(today);
-    const diff = (3 - today.getDay() + 7) % 7;
-    nextWednesday.setDate(today.getDate() + diff);
-    const weeksBetween = Math.floor((nextWednesday - baseDate) / (7 * 24 * 60 * 60 * 1000));
-    const recyclingType = recyclingTypes[weeksBetween % 2];
-    const note = document.getElementById("recycling-note");
-    if (note) {
-      note.innerHTML = `♻️ Recycling Reminder: <strong>${recyclingType}</strong> will be collected on <strong>${nextWednesday.toDateString()}</strong>.<br>🕘 Garbage Reminder: All trash must be brought to the curb by <strong>9:00 PM</strong>.`;
-    }
-  </script>
-
-  <script>
-    if (!isParent && typeof isParent !== "undefined") {
-      const linkDiv = document.createElement("div");
-      linkDiv.innerHTML = `
-    <div class="footer-note" style="text-align: center;">
-      📘 <a href="Family_Task_WiFi_Guide_With_Enforcement.pdf" target="_blank">Read the Wi-Fi & Task Rules</a>
-    </div>
-  `;
-      document.body.appendChild(linkDiv);
-    }
   </script>
 </body>
 </html>
