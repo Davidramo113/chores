@@ -326,7 +326,7 @@
       const recyclingType = recyclingTypes[weeksBetween % 2];
       const note = document.getElementById("recycling-note");
       if (note) {
-        note.innerHTML = `♻️ Recycling Reminder: <strong>${recyclingType}</strong> will be collected on <strong>${nextWednesday.toDateString()}</strong>.<br>🕘 Garbage Reminder: All trash must be brought to the curb by <strong>9:00 PM</strong>.`;
+        note.innerHTML = `♻️ Recycling Reminder: <strong>${recyclingType}</strong> will be collected on <strong>${nextWednesday.toDateString()}</strong>.<br>🕘 Garbage Reminder: All trash on collection night prior must be brought to the curb by <strong>9:00 PM</strong>.`;
       }
     });
   </script>
