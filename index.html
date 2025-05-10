@@ -6,7 +6,24 @@
 <title>Family Tasks</title>
 
 <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js">
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
+  authDomain: "chores-c86f4.firebaseapp.com",
+  databaseURL: "https://chores-c86f4-default-rtdb.firebaseio.com",
+  projectId: "chores-c86f4",
+  storageBucket: "chores-c86f4.appspot.com",
+  messagingSenderId: "503520134350",
+  appId: "1:503520134350:web:0ce4fc7c3c011eaa0cbc9f"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
+let chores = {};
 
 function rotateChores() {
   if (!isParent) return;
@@ -28,20 +45,6 @@ function rotateChores() {
   document.getElementById("chore-body").innerHTML = "";
   renderChores();
 }
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
-<script>
-const firebaseConfig = {
-apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
-authDomain: "chores-c86f4.firebaseapp.com",
-databaseURL: "https://chores-c86f4-default-rtdb.firebaseio.com",
-projectId: "chores-c86f4",
-storageBucket: "chores-c86f4.appspot.com",
-messagingSenderId: "503520134350",
-appId: "1:503520134350:web:0ce4fc7c3c011eaa0cbc9f"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 </script>
 
 <style>
@@ -169,10 +172,10 @@ line-height: 1.6;
 
 <!-- Links to PDFs -->
 <div style="text-align: center; margin-top: 15px;">
-  <a href="https://chat.openai.com/sandbox/file/Cleaning_Standards_Guide_Updated.pdf" target="_blank" style="font-size: 16px; color: green; display: block;">
+  <a href="https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf" target="_blank" style="font-size: 16px; color: green; display: block;">
     📄 View Cleaning Standards for Task Approval
   </a>
-  <a href="https://chat.openai.com/sandbox/file/Chore_Chart_Rules.pdf" target="_blank" style="font-size: 16px; color: green; display: block;">
+  <a href="https://raw.githubusercontent.com/Davidramo113/chores/main/Chore_Chart_Rules.pdf" target="_blank" style="font-size: 16px; color: green; display: block;">
     📘 View Wi-Fi and Chore Enforcement Rules
   </a>
 </div>
@@ -186,54 +189,6 @@ line-height: 1.6;
 </div>
 
 <script>
-const isParent = new URLSearchParams(window.location.search).get("user") === "parent"
-const chores = {
-Monday: {
-Jacob: ["Vacuum common areas", "Scoop/clean cat litter"],
-Jalyna: ["Wash dishes"],
-Josh: ["Take out trash"],
-Jeremy: ["Clean bedroom"]
-},
-Tuesday: {
-Jacob: ["Scoop/clean cat litter"],
-Jalyna: ["Wash dishes"],
-Josh: ["Wash dishes", "Take recycling to front curb"],
-Jeremy: ["Clean bedroom"]
-},
-Wednesday: {
-Jacob: ["Wash dishes", "Take trash to front curb"],
-Jalyna: ["Wipe down surfaces", "Scoop/clean cat litter"],
-Josh: ["Clean windows"],
-Jeremy: ["Clean bedroom"]
-},
-Thursday: {
-Jacob: ["Vacuum basement steps"],
-Jalyna: ["Wash dishes"],
-Josh: ["Wipe down appliances", "Scoop/clean cat litter"],
-Jeremy: ["Clean bedroom"]
-},
-Friday: {
-Jacob: ["Dust and sweep first floor"],
-Jalyna: ["Clean bathroom", "Scoop/clean cat litter"],
-Josh: ["Wash dishes"],
-Jeremy: ["Clean bedroom"]
-},
-Saturday: {
-Jacob: ["Wash dishes", "Scoop/clean cat litter"],
-Jalyna: ["Organize shared space"],
-Josh: ["Organize basement"],
-Jeremy: ["Clean bedroom"]
-},
-Sunday: {
-Jacob: [],
-Jalyna: [],
-Josh: [],
-Jeremy: []
-}
-};
-
-const names = ["Jacob", "Jalyna", "Josh", "Jeremy"];
-
 function syncTask(id, status) {
 db.ref("tasks/" + id).set(status);
 }
@@ -301,6 +256,7 @@ const dayCell = document.createElement("td");
 dayCell.textContent = day === today ? `${day} (${fullDate})` : day;
 row.appendChild(dayCell);
 
+const names = ["Jacob", "Jalyna", "Josh", "Jeremy"];
 names.forEach(name => {
 const cell = document.createElement("td");
 const tasks = chores[day][name] || [];
@@ -352,7 +308,55 @@ document.addEventListener("DOMContentLoaded", () => {
   if (isParent) document.getElementById("rotate-section").style.display = "block";
   db.ref("weeklyChores").once("value").then(snapshot => {
     const data = snapshot.val();
-    if (data) Object.assign(chores, data);
+    if (data) {
+    chores = data;
+  } else {
+    chores = {
+      Monday: {
+        Jacob: ["Vacuum common areas", "Scoop/clean cat litter"],
+        Jalyna: ["Wash dishes"],
+        Josh: ["Take out trash"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Tuesday: {
+        Jacob: ["Scoop/clean cat litter"],
+        Jalyna: ["Wash dishes"],
+        Josh: ["Wash dishes", "Take recycling to front curb"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Wednesday: {
+        Jacob: ["Wash dishes", "Take trash to front curb"],
+        Jalyna: ["Wipe down surfaces", "Scoop/clean cat litter"],
+        Josh: ["Clean windows"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Thursday: {
+        Jacob: ["Vacuum basement steps"],
+        Jalyna: ["Wash dishes"],
+        Josh: ["Wipe down appliances", "Scoop/clean cat litter"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Friday: {
+        Jacob: ["Dust and sweep first floor"],
+        Jalyna: ["Clean bathroom", "Scoop/clean cat litter"],
+        Josh: ["Wash dishes"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Saturday: {
+        Jacob: ["Wash dishes", "Scoop/clean cat litter"],
+        Jalyna: ["Organize shared space"],
+        Josh: ["Organize basement"],
+        Jeremy: ["Clean bedroom"]
+      },
+      Sunday: {
+        Jacob: [],
+        Jalyna: [],
+        Josh: [],
+        Jeremy: []
+      }
+    };
+    db.ref("weeklyChores").set(chores);
+  }
     renderChores();
   });
 });
