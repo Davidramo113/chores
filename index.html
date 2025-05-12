@@ -111,39 +111,39 @@ let chores = {};
 let taskStatuses = {};
 const defaultChores = {
   Monday: {
-    Jacob: ["Vacuum common areas", "Scoop/clean cat litter", "Take trash to bin"],
-    Jalyna: ["Wash dishes", "Take trash to bin"],
-    Josh: ["Take trash to bin"],
+    Jacob: ["Vacuum common areas", "Scoop/clean cat litter"],
+    Jalyna: ["Wash dishes"],
+    Josh: ["Take out trash"],
     Jeremy: ["Clean bedroom"]
   },
   Tuesday: {
-    Jacob: ["Scoop/clean cat litter", "Take trash to bin"],
-    Jalyna: ["Wash dishes", "Take trash to bin"],
-    Josh: ["Wash dishes", "Take recycling to front curb", "Take trash to bin"],
+    Jacob: ["Scoop/clean cat litter"],
+    Jalyna: ["Wash dishes"],
+    Josh: ["Wash dishes", "Take recycling to front curb"],
     Jeremy: ["Clean bedroom"]
   },
   Wednesday: {
-    Jacob: ["Wash dishes", "Take trash to front curb", "Take trash to bin"],
-    Jalyna: ["Wipe down surfaces", "Scoop/clean cat litter", "Take trash to bin"],
-    Josh: ["Clean windows", "Take trash to bin"],
+    Jacob: ["Wash dishes", "Take trash to front curb"],
+    Jalyna: ["Wipe down surfaces", "Scoop/clean cat litter"],
+    Josh: ["Clean windows"],
     Jeremy: ["Clean bedroom"]
   },
   Thursday: {
-    Jacob: ["Vacuum basement steps", "Take trash to bin"],
-    Jalyna: ["Wash dishes", "Take trash to bin"],
-    Josh: ["Wipe down appliances", "Scoop/clean cat litter", "Take trash to bin"],
+    Jacob: ["Vacuum basement steps"],
+    Jalyna: ["Wash dishes"],
+    Josh: ["Wipe down appliances", "Scoop/clean cat litter"],
     Jeremy: ["Clean bedroom"]
   },
   Friday: {
-    Jacob: ["Dust and sweep first floor", "Take trash to bin"],
-    Jalyna: ["Clean bathroom", "Scoop/clean cat litter", "Take trash to bin"],
-    Josh: ["Wash dishes", "Take trash to bin"],
+    Jacob: ["Dust and sweep first floor"],
+    Jalyna: ["Clean bathroom", "Scoop/clean cat litter"],
+    Josh: ["Wash dishes"],
     Jeremy: ["Clean bedroom"]
   },
   Saturday: {
-    Jacob: ["Wash dishes", "Scoop/clean cat litter", "Take trash to bin"],
-    Jalyna: ["Organize shared space", "Take trash to bin"],
-    Josh: ["Organize basement", "Take trash to bin"],
+    Jacob: ["Wash dishes", "Scoop/clean cat litter"],
+    Jalyna: ["Organize shared space"],
+    Josh: ["Organize basement"],
     Jeremy: ["Clean bedroom"]
   },
   Sunday: {
@@ -153,8 +153,6 @@ const defaultChores = {
     Jeremy: []
   }
 };
-// Remaining JavaScript logic excluded for brevity.
-
 function syncTask(id, status) {
   db.ref("tasks/" + id).set(status);
 }
@@ -288,6 +286,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+</head>
+<body>
+<h1>Family Tasks</h1>
+<button id="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
 <table>
 <thead>
 <tr><th>Day</th><th>Jacob</th><th>Jalyna</th><th>Josh</th><th>Jeremy</th></tr>
@@ -309,17 +311,10 @@ document.addEventListener("DOMContentLoaded", () => {
 <div style="text-align: center; margin-top: 15px;">
   <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true" target="_blank" rel="noopener noreferrer" style="font-size: 16px; color: green; display: block;">
   📄 View Cleaning Standards for Task Approval
-  </a>
+</a>
 </div>
 <div class="footer-note">
 ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
 </div>
-</body>
-</html>
-
-</html>
-<body>
-<h1>Family Tasks</h1>
-<!-- Content elements and logic continue -->
 </body>
 </html>
