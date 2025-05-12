@@ -79,11 +79,6 @@ h1 {
   text-align: center;
   margin-top: 20px;
 }
-#theme-toggle {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-}
 .highlight-row {
   background-color: var(--highlight) !important;
 }
@@ -92,6 +87,51 @@ h1 {
   font-size: 14px;
   text-align: center;
   line-height: 1.6;
+}
+
+/* FANCY DARK MODE SWITCH */
+.theme-switch {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-light);
+}
+body.dark .theme-switch {
+  color: var(--text-dark);
+}
+.theme-switch input {
+  display: none;
+}
+.slider {
+  position: relative;
+  width: 50px;
+  height: 25px;
+  background-color: #ccc;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background-color: white;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+input:checked + .slider::before {
+  transform: translateX(25px);
+}
+input:checked + .slider {
+  background-color: #4caf50;
 }
 </style>
 <script>
@@ -202,6 +242,10 @@ function resetAllTasks() {
 }
 function toggleTheme() {
   document.body.classList.toggle("dark");
+  const label = document.getElementById("mode-label");
+  const isDark = document.body.classList.contains("dark");
+  label.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+  document.getElementById("toggle-checkbox").checked = isDark;
 }
 function renderChores() {
   const tbody = document.getElementById("chore-body");
@@ -289,32 +333,45 @@ document.addEventListener("DOMContentLoaded", () => {
 </head>
 <body>
 <h1>Family Tasks</h1>
-<button id="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+
+<!-- Fancy Dark Mode Toggle -->
+<label class="theme-switch" for="toggle-checkbox">
+  <input type="checkbox" id="toggle-checkbox" onchange="toggleTheme()" />
+  <span class="slider"></span>
+  <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
+</label>
+
 <table>
 <thead>
 <tr><th>Day</th><th>Jacob</th><th>Jalyna</th><th>Josh</th><th>Jeremy</th></tr>
 </thead>
 <tbody id="chore-body"></tbody>
 </table>
+
 <div id="rotate-section" style="display: none;">
   <button onclick="rotateChores()" style="padding: 10px 20px; font-size: 16px;">🔁 Rotate Tasks</button>
 </div>
+
 <div id="reset-section">
   <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
 </div>
+
 <div class="recycling-note">
 ♻️ <strong>Recycling (Tuesday Night - May 13):</strong> This week is for <strong>Paper/Cardboard</strong>. Please bring the correct bin to the curb.
 </div>
 <div class="garbage-note">
 🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete. This is checked during task approval.
 </div>
+
 <div style="text-align: center; margin-top: 15px;">
   <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true" target="_blank" rel="noopener noreferrer" style="font-size: 16px; color: green; display: block;">
   📄 View Cleaning Standards for Task Approval
 </a>
 </div>
+
 <div class="footer-note">
 ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
 </div>
+
 </body>
 </html>
