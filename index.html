@@ -115,7 +115,7 @@ body.dark .theme-switch {
   transition: background-color 0.3s;
 }
 .slider::before {
-  content: \"\";
+  content: "";
   position: absolute;
   width: 21px;
   height: 21px;
@@ -199,6 +199,7 @@ const birthdays = {
 };
 const holidays = ["12/25", "11/28", "01/01"];
 const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
+
 function getNextRecyclingType() {
   const today = new Date();
   const nextWednesday = new Date(today);
@@ -207,6 +208,7 @@ function getNextRecyclingType() {
   const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
   return recyclingTypes[weeksSinceStart % 2];
 }
+
 function updateRecyclingNote() {
   const note = document.querySelector(".recycling-note");
   const today = new Date();
@@ -215,9 +217,11 @@ function updateRecyclingNote() {
   const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${getNextRecyclingType()}</strong>. Please bring the correct bin to the curb.`;
 }
+
 function syncTask(id, status) {
   db.ref("tasks/" + id).set(status);
 }
+
 function updateTaskUI(id, status) {
   const checkbox = document.getElementById(`${id}-checkbox`);
   const statusSpan = document.getElementById(`${id}-status`);
@@ -250,11 +254,13 @@ function toggleTask(checkbox, id) {
   syncTask(id, status);
   updateTaskUI(id, status);
 }
+
 function approveTask(id) {
   if (!isParent) return;
   syncTask(id, "approved");
   updateTaskUI(id, "approved");
 }
+
 function resetAllTasks() {
   if (!isParent) return;
   if (confirm("Are you sure you want to reset all tasks?")) {
@@ -262,12 +268,24 @@ function resetAllTasks() {
     location.reload();
   }
 }
+
 function toggleTheme() {
   document.body.classList.toggle("dark");
   const label = document.getElementById("mode-label");
   const isDark = document.body.classList.contains("dark");
   label.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
   document.getElementById("toggle-checkbox").checked = isDark;
+}
+
+function editTasks(day, name) {
+  if (!isParent) return;
+  const currentTasks = chores[day]?.[name]?.join(", ") || "";
+  const input = prompt(`Edit tasks for ${name} on ${day} (comma-separated):`, currentTasks);
+  if (input !== null) {
+    const updatedTasks = input.split(",").map(task => task.trim()).filter(task => task);
+    chores[day][name] = updatedTasks;
+    db.ref(`weeklyChores/${day}/${name}`).set(updatedTasks);
+  }
 }
 function renderChores() {
   const tbody = document.getElementById("chore-body");
@@ -324,6 +342,14 @@ function renderChores() {
             cell.appendChild(div);
           });
         }
+        if (isParent) {
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "✏️ Edit";
+          editBtn.style.marginTop = "5px";
+          editBtn.style.fontSize = "12px";
+          editBtn.onclick = () => editTasks(day, name);
+          cell.appendChild(editBtn);
+        }
       }
       row.appendChild(cell);
     });
@@ -331,7 +357,6 @@ function renderChores() {
   });
   Object.entries(taskStatuses).forEach(([id, status]) => updateTaskUI(id, status));
 }
-
 function rotateChores() {
   if (!isParent) return;
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
