@@ -226,22 +226,23 @@
     }
 
     function updateRecyclingNote() {
-      const note = document.querySelector(".recycling-note");
-      if (!note) return;
+  const note = document.querySelector(".recycling-note");
+  if (!note) return;
 
-      const today = new Date();
-      const nextWednesday = new Date(today);
-      nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7));
-      const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const today = new Date();
+  const nextWednesday = new Date(today);
+  nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7)); // Wednesday = 3
 
-      const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-      const startDate = new Date("2025-05-15"); // Known Paper/Cardboard start
-      const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
-      const index = weeksSinceStart % 2;
-      const type = recyclingTypes[index];
+  const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
-      note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
-    }
+  const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
+  const startDate = new Date("2025-05-15"); // First Paper/Cardboard pickup
+  const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
+
+  const type = recyclingTypes[weeksSinceStart % 2] || "Unknown";
+
+  note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
+}
 
     function editTasks(day, name) {
       if (!isParent) return;
