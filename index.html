@@ -139,21 +139,44 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
-
+    let chores = {};
+    let taskStatuses = {};
+    let timers = {};
     const zipCode = "11720";
-    const apiKey = "YOUR_API_KEY_HERE"; // Replace with OpenWeatherMap key
+    const weatherApiKey = "YOUR_API_KEY"; // Replace with actual API key
+
+    function formatTimeLeft(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimerDisplays() {
+      const now = Date.now();
+      for (const id in timers) {
+        const expiresAt = timers[id];
+        const timeLeft = expiresAt - now;
+        const timerSpan = document.getElementById(`${id}-timer`);
+        if (timerSpan) {
+          timerSpan.textContent = timeLeft > 0 ? `⏳ ${formatTimeLeft(timeLeft)}` : "";
+        }
+      }
+    }
+
+    setInterval(updateTimerDisplays, 1000);
+
     async function fetchWeatherAlerts() {
       try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zipCode},US&appid=${apiKey}&units=imperial`);
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zipCode},US&appid=${weatherApiKey}&units=imperial`);
         const data = await res.json();
         const alertDiv = document.querySelector(".weather-alerts");
         if (!alertDiv || !data?.list) return;
-
         const now = new Date();
         const times = [
           { label: "Sunday Night", day: 0, hour: 21 },
           { label: "Tuesday Night", day: 2, hour: 21 },
-          { label: "Wednesday Night", day: 3, hour: 21 },
+          { label: "Wednesday Night", day: 3, hour: 21 }
         ];
         let messages = [];
 
@@ -169,7 +192,7 @@
             if (weather.includes("rain")) {
               messages.push(`🌧️ <strong>${label}:</strong> Rain expected. Cover bins.`);
             } else if (wind >= 15) {
-              messages.push(`💨 <strong>${label}:</strong> Windy night. Secure or delay bins.`);
+              messages.push(`💨 <strong>${label}:</strong> Windy night. Secure bins.`);
             }
           }
         }
@@ -187,7 +210,6 @@
       const thisWed = new Date(now);
       thisWed.setDate(thisWed.getDate() + ((3 - now.getDay() + 7) % 7));
       thisWed.setHours(6, 0, 0, 0);
-
       const pickupDate = now < thisWed
         ? new Date(thisWed)
         : new Date(thisWed.getTime() + 7 * 86400000);
@@ -210,23 +232,15 @@
 <body>
   <h1>Family Tasks</h1>
 
-  <!-- Dark Mode Toggle -->
   <label class="theme-switch" for="toggle-checkbox">
     <input type="checkbox" id="toggle-checkbox" onchange="document.body.classList.toggle('dark')" />
     <span class="slider"></span>
     <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
   </label>
 
-  <!-- Alerts -->
   <div class="weather-alerts"></div>
   <div class="recycling-note"></div>
-  <div class="garbage-note">
-    🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete.
-  </div>
-
-  <!-- Footer -->
-  <div class="footer-note">
-    ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
-  </div>
+  <div class="garbage-note">🗑️ <strong>Garbage Instructions:</strong> Must be out by 9 PM the night before pickup.</div>
+  <div class="footer-note">✅ Complete tasks to regain Wi-Fi. Parent approval required.</div>
 </body>
 </html>
