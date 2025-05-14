@@ -61,21 +61,10 @@ th {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
 }
 .approved {
   color: var(--accent);
   font-weight: bold;
-}
-.timer {
-  font-size: 12px;
-  color: #c00;
-}
-button.set-timer-btn {
-  font-size: 11px;
-  margin-top: 4px;
-  padding: 2px 5px;
 }
 h1 {
   text-align: center;
@@ -155,12 +144,9 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
 const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
 let chores = {};
 let taskStatuses = {};
-let timers = {};
-
 const defaultChores = {
   Monday: {
     Jacob: ["Vacuum common areas", "Scoop/clean cat litter"],
@@ -232,39 +218,6 @@ function updateRecyclingNote() {
   note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${getNextRecyclingType()}</strong>. Please bring the correct bin to the curb.`;
 }
 
-function formatTimeLeft(ms) {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
-
-function updateTimerDisplays() {
-  const now = Date.now();
-  for (const id in timers) {
-    const expiresAt = timers[id];
-    const timeLeft = expiresAt - now;
-    const timerSpan = document.getElementById(`${id}-timer`);
-    if (timerSpan) {
-      if (timeLeft > 0) {
-        timerSpan.textContent = `⏳ ${formatTimeLeft(timeLeft)}`;
-      } else {
-        timerSpan.textContent = "";
-      }
-    }
-  }
-}
-setInterval(updateTimerDisplays, 1000);
-function setTaskTimer(id) {
-  if (!isParent) return;
-  const minutes = prompt("Set timer in minutes:");
-  const duration = parseInt(minutes);
-  if (!isNaN(duration) && duration > 0) {
-    const expiresAt = Date.now() + duration * 60 * 1000;
-    db.ref("timers/" + id).set(expiresAt);
-  }
-}
-
 function syncTask(id, status) {
   db.ref("tasks/" + id).set(status);
 }
@@ -294,6 +247,44 @@ function updateTaskUI(id, status) {
     checkbox.disabled = false;
     statusSpan.textContent = "";
     if (approveBtn) approveBtn.style.display = "none";
+  }
+}
+function toggleTask(checkbox, id) {
+  const status = checkbox.checked ? "pending" : "";
+  syncTask(id, status);
+  updateTaskUI(id, status);
+}
+
+function approveTask(id) {
+  if (!isParent) return;
+  syncTask(id, "approved");
+  updateTaskUI(id, "approved");
+}
+
+function resetAllTasks() {
+  if (!isParent) return;
+  if (confirm("Are you sure you want to reset all tasks?")) {
+    db.ref("tasks").remove();
+    location.reload();
+  }
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  const label = document.getElementById("mode-label");
+  const isDark = document.body.classList.contains("dark");
+  label.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+  document.getElementById("toggle-checkbox").checked = isDark;
+}
+
+function editTasks(day, name) {
+  if (!isParent) return;
+  const currentTasks = chores[day]?.[name]?.join(", ") || "";
+  const input = prompt(`Edit tasks for ${name} on ${day} (comma-separated):`, currentTasks);
+  if (input !== null) {
+    const updatedTasks = input.split(",").map(task => task.trim()).filter(task => task);
+    chores[day][name] = updatedTasks;
+    db.ref(`weeklyChores/${day}/${name}`).set(updatedTasks);
   }
 }
 function renderChores() {
@@ -329,53 +320,25 @@ function renderChores() {
         } else {
           tasks.forEach((task, i) => {
             const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
-           const div = document.createElement("div");
-div.className = "task";
-
-const label = document.createElement("label");
-const checkbox = document.createElement("input");
-checkbox.type = "checkbox";
-checkbox.id = `${id}-checkbox`;
-checkbox.onchange = () => toggleTask(checkbox, id);
-label.appendChild(checkbox);
-label.append(task);
-
-const timerSpan = document.createElement("span");
-timerSpan.id = `${id}-timer`;
-timerSpan.className = "timer";
-
-const status = document.createElement("span");
-status.id = `${id}-status`;
-
-const approveBtn = document.createElement("button");
-approveBtn.id = `${id}-approve`;
-approveBtn.textContent = "Approve";
-approveBtn.style.display = "none";
-approveBtn.onclick = () => approveTask(id);
-
-div.appendChild(label);
-div.appendChild(timerSpan);
-div.appendChild(status);
-if (isParent) {
-  div.appendChild(approveBtn);
-  const timerBtn = document.createElement("button");
-  timerBtn.textContent = "⏱️ Set Timer";
-  timerBtn.className = "set-timer-btn";
-  timerBtn.onclick = () => setTaskTimer(id);
-  div.appendChild(timerBtn);
-}
-
-cell.appendChild(div);
-
-
-            if (isParent) {
-              const timerBtn = document.createElement("button");
-              timerBtn.textContent = "⏱️ Set Timer";
-              timerBtn.className = "set-timer-btn";
-              timerBtn.onclick = () => setTaskTimer(id);
-              div.appendChild(timerBtn);
-            }
-
+            const div = document.createElement("div");
+            div.className = "task";
+            const label = document.createElement("label");
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = `${id}-checkbox`;
+            checkbox.onchange = () => toggleTask(checkbox, id);
+            label.appendChild(checkbox);
+            label.append(task);
+            const status = document.createElement("span");
+            status.id = `${id}-status`;
+            const approveBtn = document.createElement("button");
+            approveBtn.id = `${id}-approve`;
+            approveBtn.textContent = "Approve";
+            approveBtn.style.display = "none";
+            approveBtn.onclick = () => approveTask(id);
+            div.appendChild(label);
+            div.appendChild(status);
+            div.appendChild(approveBtn);
             cell.appendChild(div);
           });
         }
@@ -417,24 +380,16 @@ function rotateChores() {
 
 document.addEventListener("DOMContentLoaded", () => {
   if (isParent) document.getElementById("rotate-section").style.display = "block";
-  
   db.ref("weeklyChores").on("value", snapshot => {
     const data = snapshot.val();
     chores = data || defaultChores;
     if (!data) db.ref("weeklyChores").set(defaultChores);
     renderChores();
   });
-
   db.ref("tasks").on("value", snapshot => {
     taskStatuses = snapshot.val() || {};
     renderChores();
   });
-
-  db.ref("timers").on("value", snapshot => {
-    timers = snapshot.val() || {};
-    updateTimerDisplays();
-  });
-
   updateRecyclingNote();
 });
 </script>
