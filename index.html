@@ -7,124 +7,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
   <style>
-    /* Styling your page here */
-    body, html { margin: 0; padding: 0; }
-    :root {
-      --bg-light: #f0f0f0;
-      --bg-dark: #1e1e1e;
-      --text-light: #000;
-      --text-dark: #fff;
-      --table-light: #fff;
-      --table-dark: #2a2a2a;
-      --border: #ccc;
-      --accent: green;
-      --highlight: #d1ffd1;
-    }
-    body {
-      font-family: Arial;
-      padding: 20px;
-      background: var(--bg-light);
-      color: var(--text-light);
-      transition: background 0.3s, color 0.3s;
-    }
-    body.dark {
-      background: var(--bg-dark);
-      color: var(--text-dark);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--table-light);
-    }
-    table, th, td {
-      border: 1px solid var(--border);
-    }
-    body.dark table {
-      background: var(--table-dark);
-      color: var(--text-dark);
-    }
-    body.dark th, body.dark td {
-      color: var(--text-dark);
-      background-color: #333;
-      border-color: #555;
-    }
-    th, td {
-      padding: 10px;
-      text-align: center;
-    }
-    th { background: #eee; }
-    .task {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .approved { color: var(--accent); font-weight: bold; }
-    .timer { font-size: 12px; color: #c00; }
-    .set-timer-btn {
-      font-size: 11px;
-      padding: 2px 6px;
-      margin-top: 4px;
-    }
-    h1 { text-align: center; margin-bottom: 20px; }
-    .footer-note {
-      margin-top: 30px;
-      text-align: center;
-      font-style: italic;
-    }
-    #reset-section, #rotate-section {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .highlight-row {
-      background-color: var(--highlight) !important;
-    }
-    .recycling-note, .garbage-note, .weather-alert {
-      margin-top: 20px;
-      font-size: 14px;
-      text-align: center;
-      line-height: 1.6;
-    }
-    .theme-switch {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: bold;
-      color: var(--text-light);
-    }
-    body.dark .theme-switch { color: var(--text-dark); }
-    .theme-switch input { display: none; }
-    .slider {
-      position: relative;
-      width: 50px;
-      height: 25px;
-      background-color: #ccc;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .slider::before {
-      content: "";
-      position: absolute;
-      width: 21px;
-      height: 21px;
-      border-radius: 50%;
-      background-color: white;
-      top: 2px;
-      left: 2px;
-      transition: transform 0.3s;
-    }
-    input:checked + .slider::before {
-      transform: translateX(25px);
-    }
-    input:checked + .slider {
-      background-color: #4caf50;
-    }
+    /* Add your styles here */
   </style>
 </head>
 <body>
@@ -134,23 +17,27 @@
     <span class="slider"></span>
     <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
   </label>
+
   <table>
     <thead>
       <tr><th>Day</th><th>Jacob</th><th>Jalyna</th><th>Josh</th><th>Jeremy</th></tr>
     </thead>
     <tbody id="chore-body"></tbody>
   </table>
+
   <div id="rotate-section" style="display: none;">
     <button onclick="rotateChores()" style="padding: 10px 20px; font-size: 16px;">🔁 Rotate Tasks</button>
   </div>
   <div id="reset-section">
     <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
   </div>
+
   <div class="recycling-note">♻️ <strong>Recycling:</strong> Loading next pickup info...</div>
   <div class="garbage-note">
     🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete.
   </div>
   <div class="weather-alert">⛅ <strong>Weather Alert:</strong> Loading forecast info...</div>
+
   <div style="text-align: center; margin-top: 15px;">
     <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true"
        target="_blank"
@@ -159,12 +46,12 @@
       📄 View Cleaning Standards for Task Approval
     </a>
   </div>
+
   <div class="footer-note">
     ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
   </div>
 
   <script>
-    // Firebase config and initialization
     const firebaseConfig = {
       apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
       authDomain: "chores-c86f4.firebaseapp.com",
@@ -177,6 +64,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
+
     let chores = {};
     let taskStatuses = {};
     let timers = {};
@@ -209,13 +97,35 @@
     }
     setInterval(updateTimerDisplays, 1000);
 
-    // Firebase task synchronization functions
-    function syncTask(id, status) { db.ref("tasks/"+id).set(status); }
+    // Timer function that allows parents to set timers
+    function setTaskTimer(id) {
+      if (!isParent) return; // Only allow parents to set timers
+
+      const minutes = prompt("Set timer in minutes:");
+      const duration = parseInt(minutes); // Convert the input to an integer
+
+      if (!isNaN(duration) && duration > 0) {
+        const expiresAt = Date.now() + duration * 60000; // Set expiration time based on the current time and the input minutes
+
+        // Update the timer in Firebase
+        db.ref("timers/" + id).set(expiresAt);
+      } else {
+        alert("Please enter a valid number of minutes."); // Alert if the input is not valid
+      }
+    }
+
+    // Function to sync task status to Firebase
+    function syncTask(id, status) {
+      db.ref("tasks/" + id).set(status);
+    }
+
+    // Function to update task UI when status changes
     function updateTaskUI(id, status) {
       const cb = document.getElementById(`${id}-checkbox`),
             sp = document.getElementById(`${id}-status`),
             btn = document.getElementById(`${id}-approve`);
       if (!cb || !sp) return;
+
       if (status === "approved") {
         cb.checked = true;
         cb.disabled = true;
@@ -237,26 +147,40 @@
     }
 
     // Functions to toggle task state and approve task
-    function toggleTask(cb, id) { 
-      const st = cb.checked ? "pending" : ""; 
-      syncTask(id, st); 
-      updateTaskUI(id, st); 
-    }
-    function approveTask(id) { 
-      if (!isParent) return; 
-      syncTask(id, "approved"); 
-      updateTaskUI(id, "approved"); 
+    function toggleTask(cb, id) {
+      const st = cb.checked ? "pending" : "";
+      syncTask(id, st);
+      updateTaskUI(id, st);
     }
 
-    function resetAllTasks() { 
-      if (!isParent) return; 
-      if (confirm("Reset all tasks?")) { 
-        db.ref("tasks").remove(); 
-        location.reload(); 
-      } 
+    function approveTask(id) {
+      if (!isParent) return;
+      syncTask(id, "approved");
+      updateTaskUI(id, "approved");
     }
 
-    // Update recycling note
+    // Function to reset all tasks
+    function resetAllTasks() {
+      if (!isParent) return;
+      if (confirm("Reset all tasks?")) {
+        db.ref("tasks").remove();
+        location.reload();
+      }
+    }
+
+    // Function to edit tasks
+    function editTasks(day, name) {
+      if (!isParent) return;
+      const current = chores[day]?.[name]?.join(", ") || "";
+      const input = prompt(`Edit tasks for ${name} on ${day} (comma-separated):`, current);
+      if (input !== null) {
+        const updated = input.split(",").map(t => t.trim()).filter(t => t);
+        chores[day][name] = updated;
+        db.ref(`weeklyChores/${day}/${name}`).set(updated);
+      }
+    }
+
+    // Function to update recycling note
     function updateRecyclingNote() {
       const note = document.querySelector(".recycling-note");
       if (!note) return;
@@ -272,7 +196,60 @@
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${disp}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
-    // Render chores in the table
+    // Fetch weather updates (optional)
+    async function fetchWeather() {
+      try {
+        const zip = "11720"; // Your zip code here (e.g., Centereach, Long Island)
+        const key = "KNYRONKO31"; // Replace this with your actual API key
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&appid=${key}&units=imperial`);
+        const data = await res.json();
+        const el = document.querySelector(".weather-info");
+        if (!el || !data.list) return;
+
+        const dailyWeather = [
+          { lbl: "Monday", d: 1 },
+          { lbl: "Tuesday", d: 2 },
+          { lbl: "Wednesday", d: 3 },
+          { lbl: "Thursday", d: 4 },
+          { lbl: "Friday", d: 5 },
+          { lbl: "Saturday", d: 6 },
+          { lbl: "Sunday", d: 0 }
+        ];
+
+        const weatherMessages = [];
+
+        dailyWeather.forEach(({ lbl, d }) => {
+          const dailyForecast = data.list.filter(e => {
+            const dt = new Date(e.dt * 1000);
+            return dt.getDay() === d && dt.getHours() === 12; // Get forecast for midday
+          });
+
+          if (dailyForecast.length > 0) {
+            const weather = dailyForecast[0].weather[0].main.toLowerCase();
+            const temp = dailyForecast[0].main.temp;
+            const windSpeed = dailyForecast[0].wind.speed;
+
+            let weatherMessage = `<strong>${lbl}:</strong> ${weather.charAt(0).toUpperCase() + weather.slice(1)} - ${temp}°F`;
+
+            if (weather.includes("rain")) {
+              weatherMessage += ` 🌧️ Rain expected.`;
+            } else if (windSpeed >= 15) {
+              weatherMessage += ` 💨 Windy conditions, secure your bins!`;
+            }
+
+            weatherMessages.push(weatherMessage);
+          }
+        });
+
+        if (weatherMessages.length) {
+          el.innerHTML = weatherMessages.join("<br>");
+        }
+      } catch (e) {
+        console.warn("Weather err", e);
+      }
+    }
+
+    // Function to render chores in the table
     function renderChores() {
       const tb = document.getElementById("chore-body"),
             today = new Date().toLocaleDateString('en-US', { weekday: 'long' }),
@@ -323,7 +300,7 @@
       db.ref("tasks").on("value", snap => { taskStatuses = snap.val() || {}; renderChores(); });
       db.ref("timers").on("value", snap => { timers = snap.val() || {}; updateTimerDisplays(); });
       updateRecyclingNote();
-      fetchWeatherAlerts();
+      fetchWeather();
     });
   </script>
 </body>
