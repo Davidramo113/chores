@@ -275,7 +275,7 @@
    async function fetchWeather() {
   try {
     const zip = "11720"; // Your zip code here (e.g., Centereach, Long Island)
-    const key = "KNYCENTE72"; // Replace this with your actual API key
+    const key = "KNYRONKO31"; // Replace this with your actual API key
     const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&appid=${key}&units=imperial`);
     const data = await res.json();
     const el = document.querySelector(".weather-info");
