@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -249,6 +248,7 @@
         location.reload(); 
       } 
     }
+
     function editTasks(day, name) {
       if (!isParent) return;
       const current = chores[day]?.[name]?.join(", ") || "";
@@ -259,6 +259,7 @@
         db.ref(`weeklyChores/${day}/${name}`).set(updated);
       }
     }
+
     function updateRecyclingNote() {
       const note = document.querySelector(".recycling-note");
       if (!note) return;
@@ -273,114 +274,132 @@
             disp = pd.toLocaleDateString('en-US',{month:'long',day:'numeric'});
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${disp}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
-   async function fetchWeather() {
-  try {
-    const zip = "11720"; // Your zip code here (e.g., Centereach, Long Island)
-    const key = "KNYRONKO31"; // Replace this with your actual API key
-    const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&appid=${key}&units=imperial`);
-    const data = await res.json();
-    const el = document.querySelector(".weather-info");
-    if (!el || !data.list) return;
 
-    const dailyWeather = [
-      { lbl: "Monday", d: 1 },
-      { lbl: "Tuesday", d: 2 },
-      { lbl: "Wednesday", d: 3 },
-      { lbl: "Thursday", d: 4 },
-      { lbl: "Friday", d: 5 },
-      { lbl: "Saturday", d: 6 },
-      { lbl: "Sunday", d: 0 }
-    ];
-    
-    const weatherMessages = [];
+    async function fetchWeather() {
+      try {
+        const zip = "11720"; // Your zip code here
+        const key = "YOUR_API_KEY"; // Replace this with your actual API key
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&appid=${key}&units=imperial`);
+        const data = await res.json();
+        const el = document.querySelector(".weather-info");
+        if (!el || !data.list) return;
 
-    dailyWeather.forEach(({ lbl, d }) => {
-      const dailyForecast = data.list.filter(e => {
-        const dt = new Date(e.dt * 1000);
-        return dt.getDay() === d && dt.getHours() === 12; // Get forecast for midday
-      });
-
-      if (dailyForecast.length > 0) {
-        const weather = dailyForecast[0].weather[0].main.toLowerCase();
-        const temp = dailyForecast[0].main.temp;
-        const windSpeed = dailyForecast[0].wind.speed;
-
-        let weatherMessage = `<strong>${lbl}:</strong> ${weather.charAt(0).toUpperCase() + weather.slice(1)} - ${temp}°F`;
+        const dailyWeather = [
+          { lbl: "Monday", d: 1 },
+          { lbl: "Tuesday", d: 2 },
+          { lbl: "Wednesday", d: 3 },
+          { lbl: "Thursday", d: 4 },
+          { lbl: "Friday", d: 5 },
+          { lbl: "Saturday", d: 6 },
+          { lbl: "Sunday", d: 0 }
+        ];
         
-        if (weather.includes("rain")) {
-          weatherMessage += ` 🌧️ Rain expected.`;
-        } else if (windSpeed >= 15) {
-          weatherMessage += ` 💨 Windy conditions, secure your bins!`;
+        const weatherMessages = [];
+
+        dailyWeather.forEach(({ lbl, d }) => {
+          const dailyForecast = data.list.filter(e => {
+            const dt = new Date(e.dt * 1000);
+            return dt.getDay() === d && dt.getHours() === 12; // Get forecast for midday
+          });
+
+          if (dailyForecast.length > 0) {
+            const weather = dailyForecast[0].weather[0].main.toLowerCase();
+            const temp = dailyForecast[0].main.temp;
+            const windSpeed = dailyForecast[0].wind.speed;
+
+            let weatherMessage = `<strong>${lbl}:</strong> ${weather.charAt(0).toUpperCase() + weather.slice(1)} - ${temp}°F`;
+            
+            if (weather.includes("rain")) {
+              weatherMessage += ` 🌧️ Rain expected.`;
+            } else if (windSpeed >= 15) {
+              weatherMessage += ` 💨 Windy conditions, secure your bins!`;
+            }
+
+            weatherMessages.push(weatherMessage);
+          }
+        });
+
+        if (weatherMessages.length) {
+          el.innerHTML = weatherMessages.join("<br>");
         }
-
-        weatherMessages.push(weatherMessage);
+      } catch (e) {
+        console.warn("Weather err", e);
       }
-    });
-
-    if (weatherMessages.length) {
-      el.innerHTML = weatherMessages.join("<br>");
     }
-  } catch (e) {
-    console.warn("Weather err", e);
-  }
-}
+
+    // Render chores for each day of the week
     function renderChores() {
-      const tb=document.getElementById("chore-body"),
-            today=new Date().toLocaleDateString('en-US',{weekday:'long'}),
-            fd=new Date().toLocaleDateString();
+      const tb = document.getElementById("chore-body");
+      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      const fd = new Date().toLocaleDateString();
       tb.innerHTML = "";
-      ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].forEach(day=>{
-        const tr=document.createElement("tr");
-        if(day===today) tr.classList.add("highlight-row");
-        const tdDay=document.createElement("td");
-        tdDay.textContent = day===today ? `${day} (${fd})` : day;
+      ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].forEach(day => {
+        const tr = document.createElement("tr");
+        if (day === today) tr.classList.add("highlight-row");
+        const tdDay = document.createElement("td");
+        tdDay.textContent = day === today ? `${day} (${fd})` : day;
         tr.append(tdDay);
-        ["Jacob","Jalyna","Josh","Jeremy"].forEach(name=>{
-          const td=document.createElement("td"),
-                list=chores[day]?.[name]||[];
-          if(!list.length) td.innerHTML="<em>Free</em>";
-          else list.forEach((task,i)=>{
-            const id=`${name.toLowerCase()}-${day.toLowerCase()}-${i}`, dv=document.createElement("div");
-            dv.className="task";
-            const lb=document.createElement("label"), cb=document.createElement("input");
-            cb.type="checkbox"; cb.id=`${id}-checkbox`; cb.onchange=()=>toggleTask(cb,id);
-            lb.append(cb,document.createTextNode(task));
-            const ts=document.createElement("span"); ts.id=`${id}-timer`; ts.className="timer";
-            const ss=document.createElement("span"); ss.id=`${id}-status`;
-            dv.append(lb,ts,ss);
-            if(isParent){
-              const ab=document.createElement("button"); ab.id=`${id}-approve`; ab.textContent="Approve"; ab.style.display="none"; ab.onclick=()=>approveTask(id);
+        ["Jacob", "Jalyna", "Josh", "Jeremy"].forEach(name => {
+          const td = document.createElement("td");
+          const list = chores[day]?.[name] || [];
+          if (!list.length) td.innerHTML = "<em>Free</em>";
+          else list.forEach((task, i) => {
+            const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
+            const dv = document.createElement("div");
+            dv.className = "task";
+            const lb = document.createElement("label"), cb = document.createElement("input");
+            cb.type = "checkbox"; cb.id = `${id}-checkbox`; cb.onchange = () => toggleTask(cb, id);
+            lb.append(cb, document.createTextNode(task));
+            const ts = document.createElement("span"); ts.id = `${id}-timer`; ts.className = "timer";
+            const ss = document.createElement("span"); ss.id = `${id}-status`;
+            dv.append(lb, ts, ss);
+            if (isParent) {
+              const ab = document.createElement("button"); ab.id = `${id}-approve`; ab.textContent = "Approve"; ab.style.display = "none"; ab.onclick = () => approveTask(id);
               dv.append(ab);
-              const tbBtn=document.createElement("button"); tbBtn.textContent="⏱️ Set Timer"; tbBtn.className="set-timer-btn"; tbBtn.onclick=()=>setTaskTimer(id);
+              const tbBtn = document.createElement("button"); tbBtn.textContent = "⏱️ Set Timer"; tbBtn.className = "set-timer-btn"; tbBtn.onclick = () => setTaskTimer(id);
               dv.append(tbBtn);
             }
             td.append(dv);
           });
-          if(isParent){
-            const eb=document.createElement("button"); eb.textContent="✏️ Edit"; eb.style.marginTop="5px"; eb.style.fontSize="12px"; eb.onclick=()=>editTasks(day,name);
+          if (isParent) {
+            const eb = document.createElement("button"); eb.textContent = "✏️ Edit"; eb.style.marginTop = "5px"; eb.style.fontSize = "12px"; eb.onclick = () => editTasks(day, name);
             td.append(eb);
           }
           tr.append(td);
         });
         tb.append(tr);
       });
-      Object.entries(taskStatuses).forEach(([id,st])=>updateTaskUI(id,st));
+      Object.entries(taskStatuses).forEach(([id, st]) => updateTaskUI(id, st));
     }
+
+    // Rotate chores when parent clicks button
     function rotateChores() {
-      if(!isParent) return;
-      const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"], pool=["Jacob","Jalyna","Josh"], rot={};
-      days.forEach(day=>{
-        const d=chores[day]||{}, all=pool.map(n=>d[n]||[]).flat(), sh=all.sort(()=>Math.random()-0.5);
-        let idx=0; pool.forEach(n=>{ const c=d[n]?.length||0; rot[day]=rot[day]||{}; rot[day][n]=sh.slice(idx,idx+c); idx+=c;}); rot[day]["Jeremy"]=d["Jeremy"]||[];
+      if (!isParent) return;
+      const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      const pool = ["Jacob", "Jalyna", "Josh"];
+      const rot = {};
+      days.forEach(day => {
+        const d = chores[day] || {}, all = pool.map(n => d[n] || []).flat(), sh = all.sort(() => Math.random() - 0.5);
+        let idx = 0;
+        pool.forEach(n => {
+          const c = d[n]?.length || 0;
+          rot[day] = rot[day] || {};
+          rot[day][n] = sh.slice(idx, idx + c);
+          idx += c;
+        });
+        rot[day]["Jeremy"] = d["Jeremy"] || [];
       });
       db.ref("weeklyChores").set(rot);
     }
-    document.addEventListener("DOMContentLoaded",()=>{
-      if(isParent) document.getElementById("rotate-section").style.display="block";
-      db.ref("weeklyChores").on("value",snap=>{ chores=snap.val()||{}; renderChores(); });
-      db.ref("tasks").on("value",snap=>{ taskStatuses=snap.val()||{}; renderChores(); });
-      db.ref("timers").on("value",snap=>{ timers=snap.val()||{}; updateTimerDisplays(); });
-      updateRecyclingNote(); fetchWeatherAlerts();
+
+    // Fetch tasks, weather, and more when the page is ready
+    document.addEventListener("DOMContentLoaded", () => {
+      if (isParent) document.getElementById("rotate-section").style.display = "block";
+      db.ref("weeklyChores").on("value", snap => { chores = snap.val() || {}; renderChores(); });
+      db.ref("tasks").on("value", snap => { taskStatuses = snap.val() || {}; renderChores(); });
+      db.ref("timers").on("value", snap => { timers = snap.val() || {}; updateTimerDisplays(); });
+      updateRecyclingNote();
+      fetchWeather(); // Make sure to call this to display the weather
     });
   </script>
 </body>
