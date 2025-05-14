@@ -7,7 +7,169 @@
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
   <style>
-    /* Add your styles here */
+    /* Add the updated CSS here */
+    body, html {
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-light: #f0f0f0;
+      --bg-dark: #1e1e1e;
+      --text-light: #000;
+      --text-dark: #fff;
+      --table-light: #fff;
+      --table-dark: #2a2a2a;
+      --border: #ccc;
+      --accent: green;
+      --highlight: #d1ffd1;
+    }
+
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--table-light);
+      border: 1px solid var(--border); /* Ensures a border around the table */
+    }
+
+    table, th, td {
+      border: 1px solid var(--border); /* Borders around cells */
+    }
+
+    body.dark table {
+      background: var(--table-dark);
+      color: var(--text-dark);
+    }
+
+    body.dark th, body.dark td {
+      color: var(--text-dark);
+      background-color: #333;
+      border-color: #555; /* Darker border color for dark mode */
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #eee;
+      border: 1px solid var(--border); /* Ensure th borders are visible */
+    }
+
+    .task {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .approved {
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .timer {
+      font-size: 12px;
+      color: #c00;
+    }
+
+    .set-timer-btn {
+      font-size: 11px;
+      padding: 2px 6px;
+      margin-top: 4px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .footer-note {
+      margin-top: 30px;
+      text-align: center;
+      font-style: italic;
+    }
+
+    #reset-section, #rotate-section {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .highlight-row {
+      background-color: var(--highlight) !important;
+    }
+
+    .recycling-note, .garbage-note, .weather-alert {
+      margin-top: 20px;
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .theme-switch {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-light);
+    }
+
+    body.dark .theme-switch {
+      color: var(--text-dark);
+    }
+
+    .theme-switch input {
+      display: none;
+    }
+
+    .slider {
+      position: relative;
+      width: 50px;
+      height: 25px;
+      background-color: #ccc;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 21px;
+      height: 21px;
+      border-radius: 50%;
+      background-color: white;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+    }
+
+    input:checked + .slider::before {
+      transform: translateX(25px);
+    }
+
+    input:checked + .slider {
+      background-color: #4caf50;
+    }
   </style>
 </head>
 <body>
