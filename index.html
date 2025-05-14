@@ -359,19 +359,25 @@
     }
 
     // Fetch weather updates (optional)
-    async function fetchWeather() {
+   async function fetchWeather() {
   try {
-    const latitude = 40.8584; // Replace with your desired latitude
-    const longitude = -73.2123; // Replace with your desired longitude
+    const latitude = 40.8584; // Your location latitude (Centereach, Long Island)
+    const longitude = -73.2123; // Your location longitude (Centereach, Long Island)
 
+    // Fetch weather data from Open-Meteo API
     const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&temperature_unit=celsius&timezone=America/New_York`);
     const data = await res.json();
 
-    if (!data || !data.daily) {
-      console.error("Weather data not found");
+    // Log the response to check the structure
+    console.log(data);
+
+    // Check if 'data.daily' exists and is an array
+    if (!data.daily || !Array.isArray(data.daily)) {
+      console.error("Weather data not in the expected format");
       return;
     }
 
+    // Prepare the weather information to display
     const weatherMessages = data.daily.map((forecast) => {
       const date = forecast.date;
       const maxTemp = Math.round(forecast.temperature_2m_max); // Max temperature for the day
@@ -392,6 +398,7 @@
       return weatherMessage;
     });
 
+    // Display weather messages in the weather alert section
     const weatherInfoDiv = document.querySelector(".weather-alert");
     if (weatherInfoDiv) {
       weatherInfoDiv.innerHTML = weatherMessages.join("<br>");
@@ -401,7 +408,6 @@
     console.warn("Weather error:", e);
   }
 }
-
     // Function to render chores in the table
     function renderChores() {
       const tb = document.getElementById("chore-body"),
