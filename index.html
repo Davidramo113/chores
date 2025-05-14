@@ -329,33 +329,44 @@ function renderChores() {
         } else {
           tasks.forEach((task, i) => {
             const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
-            const div = document.createElement("div");
-            div.className = "task";
-            const label = document.createElement("label");
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.id = `${id}-checkbox`;
-            checkbox.onchange = () => toggleTask(checkbox, id);
-            label.appendChild(checkbox);
-            label.append(task);
+           const div = document.createElement("div");
+div.className = "task";
 
-            const timerSpan = document.createElement("span");
-            timerSpan.id = `${id}-timer`;
-            timerSpan.className = "timer";
+const label = document.createElement("label");
+const checkbox = document.createElement("input");
+checkbox.type = "checkbox";
+checkbox.id = `${id}-checkbox`;
+checkbox.onchange = () => toggleTask(checkbox, id);
+label.appendChild(checkbox);
+label.append(task);
 
-            const status = document.createElement("span");
-            status.id = `${id}-status`;
+const timerSpan = document.createElement("span");
+timerSpan.id = `${id}-timer`;
+timerSpan.className = "timer";
 
-            const approveBtn = document.createElement("button");
-            approveBtn.id = `${id}-approve`;
-            approveBtn.textContent = "Approve";
-            approveBtn.style.display = "none";
-            approveBtn.onclick = () => approveTask(id);
+const status = document.createElement("span");
+status.id = `${id}-status`;
 
-            div.appendChild(label);
-            div.appendChild(timerSpan);
-            div.appendChild(status);
-            div.appendChild(approveBtn);
+const approveBtn = document.createElement("button");
+approveBtn.id = `${id}-approve`;
+approveBtn.textContent = "Approve";
+approveBtn.style.display = "none";
+approveBtn.onclick = () => approveTask(id);
+
+div.appendChild(label);
+div.appendChild(timerSpan);
+div.appendChild(status);
+if (isParent) {
+  div.appendChild(approveBtn);
+  const timerBtn = document.createElement("button");
+  timerBtn.textContent = "⏱️ Set Timer";
+  timerBtn.className = "set-timer-btn";
+  timerBtn.onclick = () => setTaskTimer(id);
+  div.appendChild(timerBtn);
+}
+
+cell.appendChild(div);
+
 
             if (isParent) {
               const timerBtn = document.createElement("button");
