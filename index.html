@@ -225,31 +225,28 @@
       }
     }
 
-    function updateRecyclingNote() {
+   function updateRecyclingNote() {
   const note = document.querySelector(".recycling-note");
   if (!note) return;
 
   const now = new Date();
 
-  // Define this week's Wednesday 6:00 AM pickup time
-  const thisWednesdayPickup = new Date(now);
-  thisWednesdayPickup.setDate(thisWednesdayPickup.getDate() + ((3 - now.getDay() + 7) % 7));
-  thisWednesdayPickup.setHours(6, 0, 0, 0);
+  // This week's Wednesday at 6 AM
+  const thisWednesday = new Date(now);
+  thisWednesday.setDate(now.getDate() + ((3 - now.getDay() + 7) % 7));
+  thisWednesday.setHours(6, 0, 0, 0);
 
-  // If we're after 6 AM Wednesday, show next week's recycling
-  const showNextWeek = now >= thisWednesdayPickup;
+  // Show this week's pickup if BEFORE Wednesday 6 AM, else show NEXT week's
+  const pickupDate = now < thisWednesday
+    ? new Date(thisWednesday)
+    : new Date(thisWednesday.getTime() + 7 * 86400000); // next Wednesday
 
-  // Calculate upcoming Wednesday (the one we display)
-  const upcomingWednesday = new Date(thisWednesdayPickup);
-  if (showNextWeek) upcomingWednesday.setDate(upcomingWednesday.getDate() + 7); // next Wednesday
-
-  // Determine which type is due
   const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-  const startDate = new Date("2025-05-15T06:00:00"); // First Paper/Cardboard pickup
-  const weeksSinceStart = Math.floor((upcomingWednesday - startDate) / (7 * 86400000));
+  const startDate = new Date("2025-05-15T06:00:00"); // Paper/Cardboard start
+  const weeksSinceStart = Math.floor((pickupDate - startDate) / (7 * 86400000));
   const type = recyclingTypes[weeksSinceStart % 2];
 
-  const mmdd = upcomingWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const mmdd = pickupDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
   note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> The next pickup is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
 }
