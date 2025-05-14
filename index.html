@@ -379,7 +379,7 @@
       db.ref("weeklyChores").on("value",snap=>{ chores=snap.val()||{}; renderChores(); });
       db.ref("tasks").on("value",snap=>{ taskStatuses=snap.val()||{}; renderChores(); });
       db.ref("timers").on("value",snap=>{ timers=snap.val()||{}; updateTimerDisplays(); });
-      updateRecyclingNote(); fetchWeatherAlerts();
+      updateRecyclingNote(); fetchWeather();
     });
   </script>
 </body>
