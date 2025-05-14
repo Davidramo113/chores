@@ -229,21 +229,24 @@
   const note = document.querySelector(".recycling-note");
   if (!note) return;
 
-  const today = new Date();
-  const nextWednesday = new Date(today);
-  nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7));
-
-  const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const now = new Date();
+  const thisWednesday = new Date(now);
+  thisWednesday.setDate(now.getDate() + ((3 - now.getDay() + 7) % 7)); // Wednesday
+  thisWednesday.setHours(6, 0, 0, 0); // 6:00 AM rollover
 
   const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-  const startDate = new Date("2025-05-15"); // Starting with Paper/Cardboard
-  const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
+  const startDate = new Date("2025-05-15T06:00:00"); // First Paper/Cardboard
 
-  let index = weeksSinceStart % 2;
-  if (index < 0 || index > 1 || isNaN(index)) index = 0; // fallback to 0 safely
-  const type = recyclingTypes[index];
+  const effectiveDate = now >= thisWednesday
+    ? new Date(thisWednesday.getTime() + 7 * 86400000)
+    : thisWednesday;
 
-  note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
+  const weeksSinceStart = Math.floor((effectiveDate - startDate) / (7 * 24 * 60 * 60 * 1000));
+  const type = recyclingTypes[weeksSinceStart % 2];
+
+  const displayDate = effectiveDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+
+  note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${displayDate}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
 }
 
     function editTasks(day, name) {
