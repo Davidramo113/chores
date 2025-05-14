@@ -162,7 +162,6 @@
       }
     }
     setInterval(updateTimerDisplays, 1000);
-
     function setTaskTimer(id) {
       if (!isParent) return;
       const minutes = prompt("Set timer in minutes:");
@@ -172,6 +171,7 @@
         db.ref("timers/" + id).set(expiresAt);
       }
     }
+
     function syncTask(id, status) {
       db.ref("tasks/" + id).set(status);
     }
@@ -225,24 +225,25 @@
       }
     }
 
-function updateRecyclingNote() {
-  const note = document.querySelector(".recycling-note");
-  if (!note) return;
+    function updateRecyclingNote() {
+      const note = document.querySelector(".recycling-note");
+      if (!note) return;
 
-  const today = new Date();
-  const nextWednesday = new Date(today);
-  nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7));
-  const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      const today = new Date();
+      const nextWednesday = new Date(today);
+      nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7));
+      const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
-  const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-  const startDate = new Date("2025-05-15"); // Paper/Cardboard was picked up
-  const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
-  const index = weeksSinceStart % 2;
-  const type = recyclingTypes[index];
+      const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
+      const startDate = new Date("2025-05-15"); // Known Paper/Cardboard start
+      const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
+      const index = weeksSinceStart % 2;
+      const type = recyclingTypes[index];
 
-  note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
-}
- function editTasks(day, name) {
+      note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
+    }
+
+    function editTasks(day, name) {
       if (!isParent) return;
       const currentTasks = chores[day]?.[name]?.join(", ") || "";
       const input = prompt(`Edit tasks for ${name} on ${day} (comma-separated):`, currentTasks);
@@ -370,12 +371,14 @@ function updateRecyclingNote() {
 <body>
   <h1>Family Tasks</h1>
 
+  <!-- Dark Mode Toggle -->
   <label class="theme-switch" for="toggle-checkbox">
     <input type="checkbox" id="toggle-checkbox" onchange="toggleTheme()" />
     <span class="slider"></span>
     <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
   </label>
 
+  <!-- Chore Table -->
   <table>
     <thead>
       <tr><th>Day</th><th>Jacob</th><th>Jalyna</th><th>Josh</th><th>Jeremy</th></tr>
@@ -383,14 +386,17 @@ function updateRecyclingNote() {
     <tbody id="chore-body"></tbody>
   </table>
 
+  <!-- Rotate Button (Parent Only) -->
   <div id="rotate-section" style="display: none;">
     <button onclick="rotateChores()" style="padding: 10px 20px; font-size: 16px;">🔁 Rotate Tasks</button>
   </div>
 
+  <!-- Reset All Tasks Button -->
   <div id="reset-section">
     <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
   </div>
 
+  <!-- Notices -->
   <div class="recycling-note">
     ♻️ <strong>Recycling:</strong> Loading next pickup info...
   </div>
@@ -398,6 +404,7 @@ function updateRecyclingNote() {
     🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete. This is checked during task approval.
   </div>
 
+  <!-- Link to Cleaning Standards -->
   <div style="text-align: center; margin-top: 15px;">
     <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true"
        target="_blank"
@@ -407,13 +414,9 @@ function updateRecyclingNote() {
     </a>
   </div>
 
+  <!-- Footer -->
   <div class="footer-note">
     ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
   </div>
 </body>
 </html>
-
-
-
-
-  
