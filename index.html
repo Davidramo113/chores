@@ -360,56 +360,47 @@
 
     // Fetch weather updates (optional)
     async function fetchWeather() {
-      try {
-        const zip = "11720"; // Your zip code here (e.g., Centereach, Long Island)
-        const key = "KNYRONKO31"; // Replace this with your actual API key
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&appid=${key}&units=imperial`);
-        const data = await res.json();
-        const el = document.querySelector(".weather-info");
-        if (!el || !data.list) return;
+  try {
+    const latitude = 40.8584; // Replace with your desired latitude
+    const longitude = -73.2123; // Replace with your desired longitude
 
-        const dailyWeather = [
-          { lbl: "Monday", d: 1 },
-          { lbl: "Tuesday", d: 2 },
-          { lbl: "Wednesday", d: 3 },
-          { lbl: "Thursday", d: 4 },
-          { lbl: "Friday", d: 5 },
-          { lbl: "Saturday", d: 6 },
-          { lbl: "Sunday", d: 0 }
-        ];
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&temperature_unit=celsius&timezone=America/New_York`);
+    const data = await res.json();
 
-        const weatherMessages = [];
-
-        dailyWeather.forEach(({ lbl, d }) => {
-          const dailyForecast = data.list.filter(e => {
-            const dt = new Date(e.dt * 1000);
-            return dt.getDay() === d && dt.getHours() === 12; // Get forecast for midday
-          });
-
-          if (dailyForecast.length > 0) {
-            const weather = dailyForecast[0].weather[0].main.toLowerCase();
-            const temp = dailyForecast[0].main.temp;
-            const windSpeed = dailyForecast[0].wind.speed;
-
-            let weatherMessage = `<strong>${lbl}:</strong> ${weather.charAt(0).toUpperCase() + weather.slice(1)} - ${temp}°F`;
-
-            if (weather.includes("rain")) {
-              weatherMessage += ` 🌧️ Rain expected.`;
-            } else if (windSpeed >= 15) {
-              weatherMessage += ` 💨 Windy conditions, secure your bins!`;
-            }
-
-            weatherMessages.push(weatherMessage);
-          }
-        });
-
-        if (weatherMessages.length) {
-          el.innerHTML = weatherMessages.join("<br>");
-        }
-      } catch (e) {
-        console.warn("Weather err", e);
-      }
+    if (!data || !data.daily) {
+      console.error("Weather data not found");
+      return;
     }
+
+    const weatherMessages = data.daily.map((forecast) => {
+      const date = forecast.date;
+      const maxTemp = Math.round(forecast.temperature_2m_max); // Max temperature for the day
+      const minTemp = Math.round(forecast.temperature_2m_min); // Min temperature for the day
+      const precipitation = forecast.precipitation_sum;
+      const windSpeed = forecast.windspeed_10m_max;
+
+      let weatherMessage = `<strong>${date}:</strong> High: ${maxTemp}°C, Low: ${minTemp}°C`;
+
+      if (precipitation > 0) {
+        weatherMessage += ` 🌧️ Rain expected: ${precipitation} mm`;
+      }
+
+      if (windSpeed >= 15) {
+        weatherMessage += ` 💨 Windy: Max wind speed: ${windSpeed} km/h`;
+      }
+
+      return weatherMessage;
+    });
+
+    const weatherInfoDiv = document.querySelector(".weather-alert");
+    if (weatherInfoDiv) {
+      weatherInfoDiv.innerHTML = weatherMessages.join("<br>");
+    }
+
+  } catch (e) {
+    console.warn("Weather error:", e);
+  }
+}
 
     // Function to render chores in the table
     function renderChores() {
