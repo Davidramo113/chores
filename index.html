@@ -227,21 +227,27 @@
 
    function updateRecyclingNote() {
   const note = document.querySelector(".recycling-note");
+  if (!note) return; // prevents error if element is missing
+
   const today = new Date();
   const nextWednesday = new Date(today);
   nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7));
   const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
-  const startDate = new Date("2025-05-15"); // Starting point: Paper/Cardboard
+  const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"]; // 🔁 Must be right here
+  const startDate = new Date("2025-05-15"); // Known Paper/Cardboard week
   const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
-  const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-  const type = recyclingTypes[weeksSinceStart % 2];
+  const index = weeksSinceStart % 2;
+  const type = recyclingTypes[index];
+
+  console.log("Next Recycling:", type, `(index: ${index})`);
 
   note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
 }
 
 
-    function editTasks(day, name) {
+
+   function editTasks(day, name) {
       if (!isParent) return;
       const currentTasks = chores[day]?.[name]?.join(", ") || "";
       const input = prompt(`Edit tasks for ${name} on ${day} (comma-separated):`, currentTasks);
