@@ -141,6 +141,7 @@
     let chores = {};
     let taskStatuses = {};
     let timers = {};
+
     function formatTimeLeft(ms) {
       const totalSeconds = Math.max(0, Math.floor(ms / 1000));
       const minutes = Math.floor(totalSeconds / 60);
@@ -161,6 +162,68 @@
     }
     setInterval(updateTimerDisplays, 1000);
 
+    function setTaskTimer(id) {
+      if (!isParent) return;
+      const minutes = prompt("Set timer in minutes:");
+      const duration = parseInt(minutes);
+      if (!isNaN(duration) && duration > 0) {
+        const expiresAt = Date.now() + duration * 60000;
+        db.ref("timers/" + id).set(expiresAt);
+      }
+    }
+    function syncTask(id, status) {
+      db.ref("tasks/" + id).set(status);
+    }
+
+    function updateTaskUI(id, status) {
+      const checkbox = document.getElementById(`${id}-checkbox`);
+      const statusSpan = document.getElementById(`${id}-status`);
+      const approveBtn = document.getElementById(`${id}-approve`);
+      if (!checkbox || !statusSpan) return;
+
+      if (status === "approved") {
+        checkbox.checked = true;
+        checkbox.disabled = true;
+        statusSpan.textContent = "✅ Approved";
+        statusSpan.classList.add("approved");
+        if (approveBtn) approveBtn.style.display = "none";
+      } else if (status === "pending") {
+        checkbox.checked = true;
+        checkbox.disabled = false;
+        statusSpan.textContent = "Pending";
+        if (approveBtn && isParent) {
+          approveBtn.style.display = "inline-block";
+        } else if (approveBtn) {
+          approveBtn.style.display = "none";
+        }
+      } else {
+        checkbox.checked = false;
+        checkbox.disabled = false;
+        statusSpan.textContent = "";
+        if (approveBtn) approveBtn.style.display = "none";
+      }
+    }
+
+    function toggleTask(checkbox, id) {
+      const status = checkbox.checked ? "pending" : "";
+      syncTask(id, status);
+      updateTaskUI(id, status);
+    }
+
+    function approveTask(id) {
+      if (!isParent) return;
+      syncTask(id, "approved");
+      updateTaskUI(id, "approved");
+    }
+
+    function resetAllTasks() {
+      if (!isParent) return;
+      if (confirm("Are you sure you want to reset all tasks?")) {
+        db.ref("tasks").remove();
+        location.reload();
+      }
+    }
+
     function updateRecyclingNote() {
       const note = document.querySelector(".recycling-note");
       const today = new Date();
@@ -172,6 +235,86 @@
       const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
       const type = recyclingTypes[weeksSinceStart % 2];
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
+    }
+
+    function renderChores() {
+      const tbody = document.getElementById("chore-body");
+      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      const fullDate = new Date();
+      const fullDateString = fullDate.toLocaleDateString();
+      const orderedDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      tbody.innerHTML = "";
+      orderedDays.forEach(day => {
+        const row = document.createElement("tr");
+        if (day === today) row.classList.add("highlight-row");
+        const dayCell = document.createElement("td");
+        dayCell.textContent = day === today ? `${day} (${fullDateString})` : day;
+        row.appendChild(dayCell);
+
+        const names = ["Jacob", "Jalyna", "Josh", "Jeremy"];
+        names.forEach(name => {
+          const cell = document.createElement("td");
+          const tasks = chores[day]?.[name] || [];
+
+          if (tasks.length === 0) {
+            cell.innerHTML = "<em>Free</em>";
+          } else {
+            tasks.forEach((task, i) => {
+              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
+              const div = document.createElement("div");
+              div.className = "task";
+
+              const label = document.createElement("label");
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.id = `${id}-checkbox`;
+              checkbox.onchange = () => toggleTask(checkbox, id);
+              label.appendChild(checkbox);
+              label.append(task);
+
+              const timerSpan = document.createElement("span");
+              timerSpan.id = `${id}-timer`;
+              timerSpan.className = "timer";
+
+              const status = document.createElement("span");
+              status.id = `${id}-status`;
+
+              const approveBtn = document.createElement("button");
+              approveBtn.id = `${id}-approve`;
+              approveBtn.textContent = "Approve";
+              approveBtn.style.display = "none";
+              approveBtn.onclick = () => approveTask(id);
+
+              div.appendChild(label);
+              div.appendChild(timerSpan);
+              div.appendChild(status);
+              if (isParent) {
+                div.appendChild(approveBtn);
+                const timerBtn = document.createElement("button");
+                timerBtn.textContent = "⏱️ Set Timer";
+                timerBtn.className = "set-timer-btn";
+                timerBtn.onclick = () => setTaskTimer(id);
+                div.appendChild(timerBtn);
+              }
+
+              cell.appendChild(div);
+            });
+          }
+
+          row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+      });
+
+      Object.entries(taskStatuses).forEach(([id, status]) => updateTaskUI(id, status));
+    }
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      const label = document.getElementById("mode-label");
+      const isDark = document.body.classList.contains("dark");
+      label.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+      document.getElementById("toggle-checkbox").checked = isDark;
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -195,12 +338,14 @@
 <body>
   <h1>Family Tasks</h1>
 
+  <!-- Dark Mode Toggle -->
   <label class="theme-switch" for="toggle-checkbox">
     <input type="checkbox" id="toggle-checkbox" onchange="toggleTheme()" />
     <span class="slider"></span>
     <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
   </label>
 
+  <!-- Chore Table -->
   <table>
     <thead>
       <tr><th>Day</th><th>Jacob</th><th>Jalyna</th><th>Josh</th><th>Jeremy</th></tr>
@@ -208,19 +353,25 @@
     <tbody id="chore-body"></tbody>
   </table>
 
+  <!-- Rotate Button (Parent Only) -->
   <div id="rotate-section" style="display: none;">
     <button onclick="rotateChores()" style="padding: 10px 20px; font-size: 16px;">🔁 Rotate Tasks</button>
   </div>
 
+  <!-- Reset All Tasks Button -->
   <div id="reset-section">
     <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
   </div>
 
-  <div class="recycling-note">♻️ <strong>Recycling:</strong> Loading next pickup info...</div>
+  <!-- Notices -->
+  <div class="recycling-note">
+    ♻️ <strong>Recycling:</strong> Loading next pickup info...
+  </div>
   <div class="garbage-note">
     🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete. This is checked during task approval.
   </div>
 
+  <!-- Footer -->
   <div class="footer-note">
     ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
   </div>
