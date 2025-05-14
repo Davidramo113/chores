@@ -1,449 +1,353 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Family Tasks</title>
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
-<style>
-body, html {
-  margin: 0;
-  padding: 0;
-}
-:root {
-  --bg-light: #f0f0f0;
-  --bg-dark: #1e1e1e;
-  --text-light: #000;
-  --text-dark: #fff;
-  --table-light: #fff;
-  --table-dark: #2a2a2a;
-  --border: #ccc;
-  --accent: green;
-  --highlight: #d1ffd1;
-}
-body {
-  font-family: Arial;
-  padding: 20px;
-  background: var(--bg-light);
-  color: var(--text-light);
-  transition: background 0.3s, color 0.3s;
-}
-body.dark {
-  background: var(--bg-dark);
-  color: var(--text-dark);
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--table-light);
-}
-table, th, td {
-  border: 1px solid var(--border);
-}
-body.dark table {
-  background: var(--table-dark);
-  color: var(--text-dark);
-}
-body.dark th, body.dark td {
-  color: var(--text-dark);
-  background-color: #333333;
-  border-color: #555555;
-}
-th, td {
-  padding: 10px;
-  text-align: center;
-}
-th {
-  background: #eee;
-}
-.task {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.approved {
-  color: var(--accent);
-  font-weight: bold;
-}
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-.footer-note {
-  margin-top: 30px;
-  text-align: center;
-  font-style: italic;
-}
-#reset-section, #rotate-section {
-  text-align: center;
-  margin-top: 20px;
-}
-.highlight-row {
-  background-color: var(--highlight) !important;
-}
-.recycling-note, .garbage-note {
-  margin-top: 20px;
-  font-size: 14px;
-  text-align: center;
-  line-height: 1.6;
-}
-.theme-switch {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: bold;
-  color: var(--text-light);
-}
-body.dark .theme-switch {
-  color: var(--text-dark);
-}
-.theme-switch input {
-  display: none;
-}
-.slider {
-  position: relative;
-  width: 50px;
-  height: 25px;
-  background-color: #ccc;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.slider::before {
-  content: "";
-  position: absolute;
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
-  background-color: white;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s;
-}
-input:checked + .slider::before {
-  transform: translateX(25px);
-}
-input:checked + .slider {
-  background-color: #4caf50;
-}
-</style>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
-  authDomain: "chores-c86f4.firebaseapp.com",
-  databaseURL: "https://chores-c86f4-default-rtdb.firebaseio.com",
-  projectId: "chores-c86f4",
-  storageBucket: "chores-c86f4.appspot.com",
-  messagingSenderId: "503520134350",
-  appId: "1:503520134350:web:0ce4fc7c3c011eaa0cbc9f"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
-let chores = {};
-let taskStatuses = {};
-const defaultChores = {
-  Monday: {
-    Jacob: ["Vacuum common areas", "Scoop/clean cat litter"],
-    Jalyna: ["Wash dishes"],
-    Josh: ["Take out trash"],
-    Jeremy: ["Clean bedroom"]
-  },
-  Tuesday: {
-    Jacob: ["Scoop/clean cat litter"],
-    Jalyna: ["Wash dishes"],
-    Josh: ["Take recycling to front curb"],
-    Jeremy: ["Clean bedroom"]
-  },
-  Wednesday: {
-    Jacob: ["Wash dishes", "Take trash to front curb"],
-    Jalyna: ["Wipe down surfaces", "Scoop/clean cat litter"],
-    Josh: ["Clean windows"],
-    Jeremy: ["Clean bedroom"]
-  },
-  Thursday: {
-    Jacob: ["Vacuum basement steps"],
-    Jalyna: ["Wash dishes"],
-    Josh: ["Wipe down appliances", "Scoop/clean cat litter"],
-    Jeremy: ["Clean bedroom"]
-  },
-  Friday: {
-    Jacob: ["Dust and sweep first floor"],
-    Jalyna: ["Clean bathroom", "Scoop/clean cat litter"],
-    Josh: ["Wash dishes"],
-    Jeremy: ["Clean bedroom"]
-  },
-  Saturday: {
-    Jacob: ["Wash dishes", "Scoop/clean cat litter"],
-    Jalyna: ["Organize shared space"],
-    Josh: ["Organize basement"],
-    Jeremy: ["Clean bedroom"]
-  },
-  Sunday: {
-    Jacob: [],
-    Jalyna: [],
-    Josh: [],
-    Jeremy: []
-  }
-};
-const birthdays = {
-  "04/07": "Jacob",
-  "11/13": "Jalyna",
-  "09/02": "Jeremy",
-  "05/27": "Josh"
-};
-const holidays = ["12/25", "11/28", "01/01"];
-const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-
-function getNextRecyclingType() {
-  const today = new Date();
-  const nextWednesday = new Date(today);
-  nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7));
-  const startDate = new Date("2024-05-15");
-  const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
-  return recyclingTypes[weeksSinceStart % 2];
-}
-
-function updateRecyclingNote() {
-  const note = document.querySelector(".recycling-note");
-  const today = new Date();
-  const nextWednesday = new Date(today);
-  nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7));
-  const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${getNextRecyclingType()}</strong>. Please bring the correct bin to the curb.`;
-}
-
-function syncTask(id, status) {
-  db.ref("tasks/" + id).set(status);
-}
-
-function updateTaskUI(id, status) {
-  const checkbox = document.getElementById(`${id}-checkbox`);
-  const statusSpan = document.getElementById(`${id}-status`);
-  const approveBtn = document.getElementById(`${id}-approve`);
-  if (!checkbox || !statusSpan) return;
-  if (status === "approved") {
-    checkbox.checked = true;
-    checkbox.disabled = true;
-    statusSpan.textContent = "✅ Approved";
-    statusSpan.classList.add("approved");
-    if (approveBtn) approveBtn.style.display = "none";
-  } else if (status === "pending") {
-    checkbox.checked = true;
-    checkbox.disabled = false;
-    statusSpan.textContent = "Pending";
-    if (approveBtn && isParent) {
-      approveBtn.style.display = "inline-block";
-    } else if (approveBtn) {
-      approveBtn.style.display = "none";
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Tasks</title>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+  <style>
+    body, html { margin: 0; padding: 0; }
+    :root {
+      --bg-light: #f0f0f0;
+      --bg-dark: #1e1e1e;
+      --text-light: #000;
+      --text-dark: #fff;
+      --table-light: #fff;
+      --table-dark: #2a2a2a;
+      --border: #ccc;
+      --accent: green;
+      --highlight: #d1ffd1;
     }
-  } else {
-    checkbox.checked = false;
-    checkbox.disabled = false;
-    statusSpan.textContent = "";
-    if (approveBtn) approveBtn.style.display = "none";
-  }
-}
-function toggleTask(checkbox, id) {
-  const status = checkbox.checked ? "pending" : "";
-  syncTask(id, status);
-  updateTaskUI(id, status);
-}
-
-function approveTask(id) {
-  if (!isParent) return;
-  syncTask(id, "approved");
-  updateTaskUI(id, "approved");
-}
-
-function resetAllTasks() {
-  if (!isParent) return;
-  if (confirm("Are you sure you want to reset all tasks?")) {
-    db.ref("tasks").remove();
-    location.reload();
-  }
-}
-
-function toggleTheme() {
-  document.body.classList.toggle("dark");
-  const label = document.getElementById("mode-label");
-  const isDark = document.body.classList.contains("dark");
-  label.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
-  document.getElementById("toggle-checkbox").checked = isDark;
-}
-
-function editTasks(day, name) {
-  if (!isParent) return;
-  const currentTasks = chores[day]?.[name]?.join(", ") || "";
-  const input = prompt(`Edit tasks for ${name} on ${day} (comma-separated):`, currentTasks);
-  if (input !== null) {
-    const updatedTasks = input.split(",").map(task => task.trim()).filter(task => task);
-    chores[day][name] = updatedTasks;
-    db.ref(`weeklyChores/${day}/${name}`).set(updatedTasks);
-  }
-}
-function renderChores() {
-  const tbody = document.getElementById("chore-body");
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-  const fullDate = new Date();
-  const fullDateString = fullDate.toLocaleDateString();
-  const orderedDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  tbody.innerHTML = "";
-  orderedDays.forEach(day => {
-    const row = document.createElement("tr");
-    if (day === today) row.classList.add("highlight-row");
-    const dayCell = document.createElement("td");
-    dayCell.textContent = day === today ? `${day} (${fullDateString})` : day;
-    row.appendChild(dayCell);
-    const names = ["Jacob", "Jalyna", "Josh", "Jeremy"];
-    names.forEach(name => {
-      const cell = document.createElement("td");
-      const dateObj = new Date();
-      const offset = (orderedDays.indexOf(day) - dateObj.getDay() + 7) % 7;
-      dateObj.setDate(dateObj.getDate() + offset);
-      const mmdd = dateObj.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
-      const isBirthday = birthdays[mmdd] === name;
-      const isHoliday = holidays.includes(mmdd);
-      if (isBirthday) {
-        cell.innerHTML = `<strong>🎉 Happy Birthday ${name}!</strong>`;
-      } else if (isHoliday) {
-        cell.innerHTML = `<strong>🎊 Holiday - No Tasks</strong>`;
-      } else {
-        const tasks = chores[day]?.[name] || [];
-        if (tasks.length === 0) {
-          cell.innerHTML = "<em>Free</em>";
-        } else {
-          tasks.forEach((task, i) => {
-            const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
-            const div = document.createElement("div");
-            div.className = "task";
-            const label = document.createElement("label");
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.id = `${id}-checkbox`;
-            checkbox.onchange = () => toggleTask(checkbox, id);
-            label.appendChild(checkbox);
-            label.append(task);
-            const status = document.createElement("span");
-            status.id = `${id}-status`;
-            const approveBtn = document.createElement("button");
-            approveBtn.id = `${id}-approve`;
-            approveBtn.textContent = "Approve";
-            approveBtn.style.display = "none";
-            approveBtn.onclick = () => approveTask(id);
-            div.appendChild(label);
-            div.appendChild(status);
-            div.appendChild(approveBtn);
-            cell.appendChild(div);
-          });
-        }
-        if (isParent) {
-          const editBtn = document.createElement("button");
-          editBtn.textContent = "✏️ Edit";
-          editBtn.style.marginTop = "5px";
-          editBtn.style.fontSize = "12px";
-          editBtn.onclick = () => editTasks(day, name);
-          cell.appendChild(editBtn);
-        }
-      }
-      row.appendChild(cell);
-    });
-    tbody.appendChild(row);
-  });
-  Object.entries(taskStatuses).forEach(([id, status]) => updateTaskUI(id, status));
-}
-function rotateChores() {
-  if (!isParent) return;
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const rotationPool = ["Jacob", "Jalyna", "Josh"];
-  const rotated = {};
-  days.forEach(day => {
-    const daily = chores[day] || {};
-    const poolTasks = rotationPool.map(name => daily[name] || []).flat();
-    const shuffled = poolTasks.sort(() => Math.random() - 0.5);
-    let index = 0;
-    rotationPool.forEach(name => {
-      const count = daily[name]?.length || 0;
-      rotated[day] = rotated[day] || {};
-      rotated[day][name] = shuffled.slice(index, index + count);
-      index += count;
-    });
-    rotated[day]["Jeremy"] = daily["Jeremy"] || [];
-  });
-  db.ref("weeklyChores").set(rotated);
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (isParent) document.getElementById("rotate-section").style.display = "block";
-  db.ref("weeklyChores").on("value", snapshot => {
-    const data = snapshot.val();
-    chores = data || defaultChores;
-    if (!data) db.ref("weeklyChores").set(defaultChores);
-    renderChores();
-  });
-  db.ref("tasks").on("value", snapshot => {
-    taskStatuses = snapshot.val() || {};
-    renderChores();
-  });
-  updateRecyclingNote();
-});
-</script>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--table-light);
+    }
+    table, th, td {
+      border: 1px solid var(--border);
+    }
+    body.dark table {
+      background: var(--table-dark);
+      color: var(--text-dark);
+    }
+    body.dark th, body.dark td {
+      color: var(--text-dark);
+      background-color: #333;
+      border-color: #555;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    th { background: #eee; }
+    .task {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .approved { color: var(--accent); font-weight: bold; }
+    .timer { font-size: 12px; color: #c00; }
+    .set-timer-btn {
+      font-size: 11px;
+      padding: 2px 6px;
+      margin-top: 4px;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .footer-note {
+      margin-top: 30px;
+      text-align: center;
+      font-style: italic;
+    }
+    #reset-section, #rotate-section {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .highlight-row {
+      background-color: var(--highlight) !important;
+    }
+    .recycling-note, .garbage-note, .weather-alert {
+      margin-top: 20px;
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .theme-switch {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-light);
+    }
+    body.dark .theme-switch { color: var(--text-dark); }
+    .theme-switch input { display: none; }
+    .slider {
+      position: relative;
+      width: 50px;
+      height: 25px;
+      background-color: #ccc;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 21px;
+      height: 21px;
+      border-radius: 50%;
+      background-color: white;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+    }
+    input:checked + .slider::before {
+      transform: translateX(25px);
+    }
+    input:checked + .slider {
+      background-color: #4caf50;
+    }
+  </style>
 </head>
 <body>
-<h1>Family Tasks</h1>
+  <h1>Family Tasks</h1>
+  <label class="theme-switch" for="toggle-checkbox">
+    <input type="checkbox" id="toggle-checkbox" onchange="toggleTheme()" />
+    <span class="slider"></span>
+    <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
+  </label>
+  <table>
+    <thead>
+      <tr><th>Day</th><th>Jacob</th><th>Jalyna</th><th>Josh</th><th>Jeremy</th></tr>
+    </thead>
+    <tbody id="chore-body"></tbody>
+  </table>
+  <div id="rotate-section" style="display: none;">
+    <button onclick="rotateChores()" style="padding: 10px 20px; font-size: 16px;">🔁 Rotate Tasks</button>
+  </div>
+  <div id="reset-section">
+    <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
+  </div>
+  <div class="recycling-note">♻️ <strong>Recycling:</strong> Loading next pickup info...</div>
+  <div class="garbage-note">
+    🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete.
+  </div>
+  <div class="weather-alert">⛅ <strong>Weather Alert:</strong> Loading forecast info...</div>
+  <div style="text-align: center; margin-top: 15px;">
+    <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true"
+       target="_blank"
+       rel="noopener noreferrer"
+       style="font-size: 16px; color: green; display: block;">
+      📄 View Cleaning Standards for Task Approval
+    </a>
+  </div>
+  <div class="footer-note">
+    ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
+  </div>
 
-<!-- Dark Mode Toggle -->
-<label class="theme-switch" for="toggle-checkbox">
-  <input type="checkbox" id="toggle-checkbox" onchange="toggleTheme()" />
-  <span class="slider"></span>
-  <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
-</label>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
+      authDomain: "chores-c86f4.firebaseapp.com",
+      databaseURL: "https://chores-c86f4-default-rtdb.firebaseio.com",
+      projectId: "chores-c86f4",
+      storageBucket: "chores-c86f4.appspot.com",
+      messagingSenderId: "503520134350",
+      appId: "1:503520134350:web:0ce4fc7c3c011eaa0cbc9f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
+    let chores = {};
+    let taskStatuses = {};
+    let timers = {};
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      const isDark = document.body.classList.contains("dark");
+      document.getElementById("mode-label").textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+      document.getElementById("toggle-checkbox").checked = isDark;
+    }
 
-<!-- Chore Table -->
-<table>
-  <thead>
-    <tr><th>Day</th><th>Jacob</th><th>Jalyna</th><th>Josh</th><th>Jeremy</th></tr>
-  </thead>
-  <tbody id="chore-body"></tbody>
-</table>
+    function formatTimeLeft(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+    }
 
-<!-- Rotate Button (Parent Only) -->
-<div id="rotate-section" style="display: none;">
-  <button onclick="rotateChores()" style="padding: 10px 20px; font-size: 16px;">🔁 Rotate Tasks</button>
-</div>
+    function updateTimerDisplays() {
+      const now = Date.now();
+      for (const id in timers) {
+        const expiresAt = timers[id];
+        const timeLeft = expiresAt - now;
+        const timerSpan = document.getElementById(`${id}-timer`);
+        if (timerSpan) {
+          timerSpan.textContent = timeLeft > 0 ? `⏳ ${formatTimeLeft(timeLeft)}` : "";
+        }
+      }
+    }
+    setInterval(updateTimerDisplays, 1000);
 
-<!-- Reset All Tasks Button -->
-<div id="reset-section">
-  <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
-</div>
+    function syncTask(id, status) { db.ref("tasks/"+id).set(status); }
+    function updateTaskUI(id, status) {
+      const cb = document.getElementById(`${id}-checkbox`),
+            sp = document.getElementById(`${id}-status`),
+            btn = document.getElementById(`${id}-approve`);
+      if (!cb || !sp) return;
+      if (status === "approved") {
+        cb.checked = true;
+        cb.disabled = true;
+        sp.textContent = "✅ Approved";
+        sp.classList.add("approved");
+        if (btn) btn.style.display = "none";
+      } else if (status === "pending") {
+        cb.checked = true;
+        cb.disabled = false;
+        sp.textContent = "Pending";
+        if (btn && isParent) btn.style.display = "inline-block";
+        else if (btn) btn.style.display = "none";
+      } else {
+        cb.checked = false;
+        cb.disabled = false;
+        sp.textContent = "";
+        if (btn) btn.style.display = "none";
+      }
+    }
 
-<!-- Notices -->
-<div class="recycling-note">
-♻️ <strong>Recycling:</strong> Loading next pickup info...
-</div>
-<div class="garbage-note">
-🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete. This is checked during task approval.
-</div>
-
-<!-- Link to Cleaning Standards -->
-<div style="text-align: center; margin-top: 15px;">
-  <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true"
-     target="_blank"
-     rel="noopener noreferrer"
-     style="font-size: 16px; color: green; display: block;">
-    📄 View Cleaning Standards for Task Approval
-  </a>
-</div>
-
-<!-- Footer -->
-<div class="footer-note">
-✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
-</div>
-
+    function toggleTask(cb, id) { 
+      const st = cb.checked ? "pending" : ""; 
+      syncTask(id, st); 
+      updateTaskUI(id, st); 
+    }
+    function approveTask(id) { 
+      if (!isParent) return; 
+      syncTask(id, "approved"); 
+      updateTaskUI(id, "approved"); 
+    }
+    function resetAllTasks() { 
+      if (!isParent) return; 
+      if (confirm("Reset all tasks?")) { 
+        db.ref("tasks").remove(); 
+        location.reload(); 
+      } 
+    }
+    function editTasks(day, name) {
+      if (!isParent) return;
+      const current = chores[day]?.[name]?.join(", ") || "";
+      const input = prompt(`Edit tasks for ${name} on ${day} (comma-separated):`, current);
+      if (input !== null) {
+        const updated = input.split(",").map(t=>t.trim()).filter(t=>t);
+        chores[day][name] = updated;
+        db.ref(`weeklyChores/${day}/${name}`).set(updated);
+      }
+    }
+    function updateRecyclingNote() {
+      const note = document.querySelector(".recycling-note");
+      if (!note) return;
+      const now = new Date(), wed = new Date(now);
+      wed.setDate(wed.getDate()+((3-now.getDay()+7)%7));
+      wed.setHours(6,0,0,0);
+      const pd = now<wed ? wed : new Date(wed.getTime()+7*86400000);
+      const sd = new Date("2025-05-15T06:00:00");
+      const types = ["Paper/Cardboard","Plastic/Metal"],
+            weeks = Math.round((pd-sd)/(7*86400000)),
+            type = types[weeks%2],
+            disp = pd.toLocaleDateString('en-US',{month:'long',day:'numeric'});
+      note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${disp}):</strong> Next pickup for <strong>${type}</strong>.`;
+    }
+    async function fetchWeatherAlerts() {
+      try {
+        const zip="11720", key="YOUR_API_KEY";
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&appid=${key}&units=imperial`);
+        const data = await res.json(), el = document.querySelector(".weather-alert");
+        if (!el||!data.list) return;
+        const slots=[{lbl:"Sunday Night",d:0,h:21},{lbl:"Tuesday Night",d:2,h:21},{lbl:"Wednesday Night",d:3,h:21}], msgs=[];
+        slots.forEach(({lbl,d,h})=>{
+          const m = data.list.find(e=>{const dt=new Date(e.dt*1000);return dt.getDay()===d&&dt.getHours()===h;});
+          if (m) {
+            const w = m.weather[0].main.toLowerCase(), wind=m.wind.speed;
+            if (w.includes("rain")) msgs.push(`🌧️ <strong>${lbl}:</strong> Rain expected.`);
+            else if (wind>=15) msgs.push(`💨 <strong>${lbl}:</strong> Windy. Secure bins.`);
+          }
+        });
+        if (msgs.length) el.innerHTML = msgs.join("<br>");
+      } catch(e) { console.warn("Weather err",e); }
+    }
+    function renderChores() {
+      const tb=document.getElementById("chore-body"),
+            today=new Date().toLocaleDateString('en-US',{weekday:'long'}),
+            fd=new Date().toLocaleDateString();
+      tb.innerHTML = "";
+      ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].forEach(day=>{
+        const tr=document.createElement("tr");
+        if(day===today) tr.classList.add("highlight-row");
+        const tdDay=document.createElement("td");
+        tdDay.textContent = day===today ? `${day} (${fd})` : day;
+        tr.append(tdDay);
+        ["Jacob","Jalyna","Josh","Jeremy"].forEach(name=>{
+          const td=document.createElement("td"),
+                list=chores[day]?.[name]||[];
+          if(!list.length) td.innerHTML="<em>Free</em>";
+          else list.forEach((task,i)=>{
+            const id=`${name.toLowerCase()}-${day.toLowerCase()}-${i}`, dv=document.createElement("div");
+            dv.className="task";
+            const lb=document.createElement("label"), cb=document.createElement("input");
+            cb.type="checkbox"; cb.id=`${id}-checkbox`; cb.onchange=()=>toggleTask(cb,id);
+            lb.append(cb,document.createTextNode(task));
+            const ts=document.createElement("span"); ts.id=`${id}-timer`; ts.className="timer";
+            const ss=document.createElement("span"); ss.id=`${id}-status`;
+            dv.append(lb,ts,ss);
+            if(isParent){
+              const ab=document.createElement("button"); ab.id=`${id}-approve`; ab.textContent="Approve"; ab.style.display="none"; ab.onclick=()=>approveTask(id);
+              dv.append(ab);
+              const tbBtn=document.createElement("button"); tbBtn.textContent="⏱️ Set Timer"; tbBtn.className="set-timer-btn"; tbBtn.onclick=()=>setTaskTimer(id);
+              dv.append(tbBtn);
+            }
+            td.append(dv);
+          });
+          if(isParent){
+            const eb=document.createElement("button"); eb.textContent="✏️ Edit"; eb.style.marginTop="5px"; eb.style.fontSize="12px"; eb.onclick=()=>editTasks(day,name);
+            td.append(eb);
+          }
+          tr.append(td);
+        });
+        tb.append(tr);
+      });
+      Object.entries(taskStatuses).forEach(([id,st])=>updateTaskUI(id,st));
+    }
+    function rotateChores() {
+      if(!isParent) return;
+      const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"], pool=["Jacob","Jalyna","Josh"], rot={};
+      days.forEach(day=>{
+        const d=chores[day]||{}, all=pool.map(n=>d[n]||[]).flat(), sh=all.sort(()=>Math.random()-0.5);
+        let idx=0; pool.forEach(n=>{ const c=d[n]?.length||0; rot[day]=rot[day]||{}; rot[day][n]=sh.slice(idx,idx+c); idx+=c;}); rot[day]["Jeremy"]=d["Jeremy"]||[];
+      });
+      db.ref("weeklyChores").set(rot);
+    }
+    document.addEventListener("DOMContentLoaded",()=>{
+      if(isParent) document.getElementById("rotate-section").style.display="block";
+      db.ref("weeklyChores").on("value",snap=>{ chores=snap.val()||{}; renderChores(); });
+      db.ref("tasks").on("value",snap=>{ taskStatuses=snap.val()||{}; renderChores(); });
+      db.ref("timers").on("value",snap=>{ timers=snap.val()||{}; updateTimerDisplays(); });
+      updateRecyclingNote(); fetchWeatherAlerts();
+    });
+  </script>
 </body>
 </html>
