@@ -7,6 +7,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
   <style>
+    /* Styling your page here */
     body, html { margin: 0; padding: 0; }
     :root {
       --bg-light: #f0f0f0;
@@ -163,6 +164,7 @@
   </div>
 
   <script>
+    // Firebase config and initialization
     const firebaseConfig = {
       apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
       authDomain: "chores-c86f4.firebaseapp.com",
@@ -207,6 +209,7 @@
     }
     setInterval(updateTimerDisplays, 1000);
 
+    // Firebase task synchronization functions
     function syncTask(id, status) { db.ref("tasks/"+id).set(status); }
     function updateTaskUI(id, status) {
       const cb = document.getElementById(`${id}-checkbox`),
@@ -233,6 +236,7 @@
       }
     }
 
+    // Functions to toggle task state and approve task
     function toggleTask(cb, id) { 
       const st = cb.checked ? "pending" : ""; 
       syncTask(id, st); 
@@ -243,6 +247,7 @@
       syncTask(id, "approved"); 
       updateTaskUI(id, "approved"); 
     }
+
     function resetAllTasks() { 
       if (!isParent) return; 
       if (confirm("Reset all tasks?")) { 
@@ -251,6 +256,7 @@
       } 
     }
 
+    // Update recycling note
     function updateRecyclingNote() {
       const note = document.querySelector(".recycling-note");
       if (!note) return;
@@ -266,11 +272,7 @@
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${disp}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
-    // Fetch weather data (you can use this later to integrate weather alerts)
-    async function fetchWeatherAlerts() {
-      // Add your weather fetching logic here
-    }
-
+    // Render chores in the table
     function renderChores() {
       const tb = document.getElementById("chore-body"),
             today = new Date().toLocaleDateString('en-US', { weekday: 'long' }),
@@ -314,6 +316,7 @@
       Object.entries(taskStatuses).forEach(([id, st]) => updateTaskUI(id, st));
     }
 
+    // Initialize and load data
     document.addEventListener("DOMContentLoaded", () => {
       if (isParent) document.getElementById("rotate-section").style.display = "block";
       db.ref("weeklyChores").on("value", snap => { chores = snap.val() || {}; renderChores(); });
