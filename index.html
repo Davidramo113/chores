@@ -359,7 +359,7 @@
     }
 
     // Fetch weather updates (optional)
-   async function fetchWeather() {
+  async function fetchWeather() {
   try {
     const latitude = 40.8584; // Your location latitude (Centereach, Long Island)
     const longitude = -73.2123; // Your location longitude (Centereach, Long Island)
@@ -368,12 +368,12 @@
     const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&temperature_unit=celsius&timezone=America/New_York`);
     const data = await res.json();
 
-    // Log the response to check the structure
-    console.log(data);
+    // Log the entire API response to understand the structure
+    console.log("Weather Data:", data);
 
     // Check if 'data.daily' exists and is an array
     if (!data.daily || !Array.isArray(data.daily)) {
-      console.error("Weather data not in the expected format");
+      console.error("Weather data not in the expected format", data);
       return;
     }
 
