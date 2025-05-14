@@ -231,15 +231,17 @@
 
   const today = new Date();
   const nextWednesday = new Date(today);
-  nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7)); // Wednesday = 3
+  nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7));
 
   const mmdd = nextWednesday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
   const recyclingTypes = ["Paper/Cardboard", "Plastic/Metal"];
-  const startDate = new Date("2025-05-15"); // First Paper/Cardboard pickup
+  const startDate = new Date("2025-05-15"); // Starting with Paper/Cardboard
   const weeksSinceStart = Math.floor((nextWednesday - startDate) / (7 * 24 * 60 * 60 * 1000));
 
-  const type = recyclingTypes[weeksSinceStart % 2] || "Unknown";
+  let index = weeksSinceStart % 2;
+  if (index < 0 || index > 1 || isNaN(index)) index = 0; // fallback to 0 safely
+  const type = recyclingTypes[index];
 
   note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${mmdd}):</strong> This week is for <strong>${type}</strong>. Please bring the correct bin to the curb.`;
 }
