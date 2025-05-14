@@ -274,7 +274,7 @@
     }
     async function fetchWeatherAlerts() {
       try {
-        const zip="11720", key="YOUR_API_KEY";
+        const zip="11720", key="KNYCENTE72";
         const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&appid=${key}&units=imperial`);
         const data = await res.json(), el = document.querySelector(".weather-alert");
         if (!el||!data.list) return;
