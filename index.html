@@ -313,7 +313,7 @@
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
-    // — Today's Weather in °F + Icon, local date fix —
+    // — Today's Weather in °F + Icon with local date parse —
     const weatherConfig = {
       latitude: 40.8485,
       longitude: -73.149,
@@ -332,7 +332,6 @@
     };
     async function fetchWeatherToday(){
       try {
-        // build local YYYY-MM-DD
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth()+1).padStart(2,'0');
@@ -356,8 +355,10 @@
         const pct  = data.daily.precipitation_probability_max[0];
         const code = data.daily.weathercode[0];
         const icon = weatherIcons[code] || "🌡️";
-        const d    = new Date(date);
-        const name = d.toLocaleDateString("en-US",{weekday:"long"});
+        // parse as local date
+        const [y, mo, day] = date.split("-").map(Number);
+        const dLocal = new Date(y, mo-1, day);
+        const name = dLocal.toLocaleDateString("en-US",{weekday:"long"});
         const c    = document.querySelector(".weather-alert");
         if (c) {
           c.innerHTML = `<span class="weather-icon">${icon}</span>` +
