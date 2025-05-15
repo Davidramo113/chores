@@ -20,6 +20,8 @@
       --border: #bbdefb;
       --highlight: rgba(33,150,243,0.1);
       --card-shadow: rgba(0, 0, 0, 0.1);
+      --card-bg-light: #fff;
+      --card-bg-dark: #2a2a2a;
     }
     html, body {
       margin: 0;
@@ -45,14 +47,15 @@
     /* Table Card */
     .table-container {
       max-width: 1200px;
-      margin: auto;
-      background: #fff;
+      margin: 1rem auto;
+      background: var(--card-bg-light);
       border-radius: 8px;
       box-shadow: 0 8px 16px var(--card-shadow);
       animation: fadeIn 0.8s ease-out;
-      max-height: 70vh;
-      overflow-y: auto;
-      overflow-x: auto;
+      overflow: visible;
+    }
+    body.dark .table-container {
+      background: var(--bg-dark);
     }
     table {
       width: 100%;
@@ -72,6 +75,9 @@
       text-align: center;
       animation: fadeInUp 0.5s ease-out;
     }
+    th {
+      font-weight: 500;
+    }
     tr:nth-child(even) td {
       background: rgba(0, 0, 0, 0.02);
     }
@@ -84,13 +90,16 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #fff;
+      background: var(--card-bg-light);
       border-radius: 6px;
       padding: 8px 12px;
       margin: 8px 0;
       box-shadow: 0 4px 8px var(--card-shadow);
       transition: transform 0.2s ease, background 0.2s ease;
       animation: fadeInLeft 0.6s ease-out;
+    }
+    body.dark .task {
+      background: var(--card-bg-dark);
     }
     .task:hover {
       transform: translateY(-2px);
@@ -104,20 +113,16 @@
       color: var(--accent);
       font-weight: 600;
     }
+    .task button {
+      padding: 4px 8px;
+      font-size: 12px;
+      margin-left: 4px;
+    }
 
     /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInLeft {
-      from { opacity: 0; transform: translateX(-20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
 
     /* Weather Card */
     .weather-alert {
@@ -126,25 +131,22 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      background: #fff;
+      background: var(--card-bg-light);
       border-left: 6px solid var(--accent);
       border-radius: 6px;
       padding: 12px 16px;
       box-shadow: 0 4px 12px var(--card-shadow);
       animation: slideInDown 0.6s ease-out;
     }
+    body.dark .weather-alert {
+      background: var(--card-bg-dark);
+    }
     .weather-icon {
       font-size: 2rem;
       animation: rotateIn 0.7s ease-out;
     }
-    @keyframes slideInDown {
-      from { transform: translateY(-100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes rotateIn {
-      from { transform: rotate(-45deg) scale(0.5); opacity: 0; }
-      to { transform: rotate(0) scale(1); opacity: 1; }
-    }
+    @keyframes slideInDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes rotateIn { from { transform: rotate(-45deg) scale(0.5); opacity: 0; } to { transform: rotate(0) scale(1); opacity: 1; } }
 
     /* Checkbox Pop */
     input[type="checkbox"] {
@@ -162,7 +164,8 @@
       content: "✔";
       color: #fff;
       position: absolute;
-      top: 0; left: 3px;
+      top: 0;
+      left: 3px;
       opacity: 0;
       transform: scale(0);
       transition: transform 0.2s ease, opacity 0.2s ease;
@@ -190,9 +193,7 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-    button:hover {
-      background: var(--accent-dark);
-    }
+    button:hover { background: var(--accent-dark); }
     button::after {
       content: "";
       position: absolute;
@@ -211,6 +212,21 @@
       left: var(--x);
       transform: translate(-50%, -50%) scale(1);
       transition: 0s;
+    }
+
+    /* Centered Notes */
+    .recycling-note, .garbage-note {
+      text-align: center;
+      max-width: 1200px;
+      margin: 10px auto;
+      background: var(--card-bg-light);
+      border-radius: 4px;
+      padding: 8px;
+      box-shadow: 0 2px 4px var(--card-shadow);
+    }
+    body.dark .recycling-note, body.dark .garbage-note {
+      background: var(--card-bg-dark);
+      color: var(--text-dark);
     }
 
     /* Footer */
@@ -339,19 +355,18 @@
     function resetAllTasks() { if (!isParent) return; if (confirm('Reset all tasks?')){ db.ref('tasks').remove(); location.reload(); }}
     function editTasks(day,name) { if (!isParent) return; const cur = (chores[day]?.[name]||[]).join(', '); const v = prompt(`Edit ${name} on ${day}:`,cur); if (v !== null) { const arr = v.split(',').map(x=>x.trim()).filter(x=>x); chores[day][name]=arr; db.ref(`weeklyChores/${day}/${name}`).set(arr);} }
 
-    // Recycling note
-    function updateRecycling() { const n = document.querySelector('.recycling-note'); if (!n) return; const now=new Date(), wed=new Date(now); wed.setDate(wed.getDate()+((3-now.getDay()+7)%7)); wed.setHours(6,0,0,0); const pd=now<wed?wed:new Date(wed.getTime()+7*86400000); const start=new Date('2025-05-15T06:00:00'); const types=['Paper/Cardboard','Plastic/Metal']; const weeks=Math.round((pd-start)/(7*86400000)); const type=types[weeks%2]; const dStr=pd.toLocaleDateString('en-US',{month:'long',day:'numeric'}); n.innerHTML=`♻️ <strong>Recycling:</strong> ${type} on ${dStr}`; }
+    // Recycling & garbage notes update
+    function updateRecycling() { const n=document.querySelector('.recycling-note'); if(!n)return; const now=new Date(), wed=new Date(now); wed.setDate(wed.getDate()+((3-now.getDay()+7)%7)); wed.setHours(6,0,0,0); const pd = now<wed?wed:new Date(wed.getTime()+7*86400000); const start=new Date('2025-05-15T06:00:00'); const types=['Paper/Cardboard','Plastic/Metal']; const weeks=Math.round((pd-start)/(7*86400000)); const type=types[weeks%2]; const ds=pd.toLocaleDateString('en-US',{month:'long',day:'numeric'}); document.querySelector('.recycling-note').innerHTML=`♻️ <strong>Recycling:</strong> ${type} on ${ds}`; document.querySelector('.garbage-note').innerHTML=`🗑️ <strong>Garbage:</strong> Take out before 9 PM or Wi-Fi off.`; }
 
     // Weather fetch
     const wCfg={latitude:40.8485,longitude:-73.149,timezone:'America/New_York'}; const icons={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌦️',82:'🌦️',95:'⛈️',96:'⛈️',99:'⛈️'};
-    async function fetchWeather(){try{const now=new Date(),y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0'),d=String(now.getDate()).padStart(2,'0'),ds=`${y}-${m}-${d}`,url=new URL('https://api.open-meteo.com/v1/forecast');url.searchParams.set('latitude',wCfg.latitude);url.searchParams.set('longitude',wCfg.longitude);url.searchParams.set('daily','temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode');url.searchParams.set('temperature_unit','fahrenheit');url.searchParams.set('timezone',wCfg.timezone);url.searchParams.set('start_date',ds);url.searchParams.set('end_date',ds);const res=await fetch(url),data=await res.json(),date=data.daily.time[0],maxF=Math.round(data.daily.temperature_2m_max[0]),minF=Math.round(data.daily.temperature_2m_min[0]),pct=data.daily.precipitation_probability_max[0],code=data.daily.weathercode[0],icon=icons[code]||'🌡️',[yy,mo,da]=date.split('-').map(Number),local=new Date(yy,mo-1,da),dayName=local.toLocaleDateString('en-US',{weekday:'long'});document.querySelector('.weather-alert').innerHTML=`<span class="weather-icon">${icon}</span><div><strong>${dayName}</strong><br>High ${maxF}°F, Low ${minF}°F, ${pct}% precip</div>`;}catch(e){console.error('Weather error:',e);}}    
+    async function fetchWeather(){try{const now=new Date(), y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0'), d=String(now.getDate()).padStart(2,'0'), ds=`${y}-${m}-${d}`, url=new URL('https://api.open-meteo.com/v1/forecast'); url.searchParams.set('latitude',wCfg.latitude); url.searchParams.set('longitude',wCfg.longitude); url.searchParams.set('daily','temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode'); url.searchParams.set('temperature_unit','fahrenheit'); url.searchParams.set('timezone',wCfg.timezone); url.searchParams.set('start_date',ds); url.searchParams.set('end_date',ds); const res=await fetch(url), data=await res.json(), date=data.daily.time[0], maxF=Math.round(data.daily.temperature_2m_max[0]), minF=Math.round(data.daily.temperature_2m_min[0]), pct=data.daily.precipitation_probability_max[0], code=data.daily.weathercode[0], icon=icons[code]||'🌡️', [yy,mo,da]=date.split('-').map(Number), local=new Date(yy,mo-1,da), dayName=local.toLocaleDateString('en-US',{weekday:'long'}); document.querySelector('.weather-alert').innerHTML=`<span class="weather-icon">${icon}</span><div><strong>${dayName}</strong><br>High ${maxF}°F, Low ${minF}°F, ${pct}% precip</div>`;}catch(e){console.error(e);} }
 
     // Render chores
-    function renderChores(){const tb=document.getElementById('chore-body'),todayName=new Date().toLocaleDateString('en-US',{weekday:'long'}),fullDate=new Date().toLocaleDateString();tb.innerHTML='';['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].forEach(day=>{const tr=document.createElement('tr');if(day===todayName)tr.classList.add('highlight-row');const tdDay=document.createElement('td');tdDay.textContent=day===todayName?`${day} (${fullDate})`:day;tr.append(tdDay);['Jacob','Jalyna','Josh','Jeremy'].forEach(name=>{const td=document.createElement('td'),list=chores[day]?.[name]||[];if(!list.length)td.innerHTML='<em>Free</em>';else list.forEach((task,i)=>{const id=`${name.toLowerCase()}-${day.toLowerCase()}-${i}`,dv=document.createElement('div');dv.className='task';const cb=document.createElement('input');cb.type='checkbox';cb.id=id+'-checkbox';cb.onchange=()=>toggleTask(cb,id);const lb=document.createElement('label');lb.htmlFor=id+'-checkbox';lb.textContent=task;const ts=document.createElement('span');ts.id=id+'-timer';ts.className='timer';const ss=document.createElement('span');ss.id=id+'-status';dv.append(cb,lb,ts,ss);if(isParent){const ap=document.createElement('button');ap.id=id+'-approve';ap.textContent='Approve';ap.style.display='none';ap.onclick=()=>approveTask(id);dv.append(ap);const tbB=document.createElement('button');tbB.textContent='⏱️ Set Timer';tbB.onclick=()=>setTaskTimer(id);dv.append(tbB);}td.append(dv);} );if(isParent){const eb=document.createElement('button');eb.textContent='✏️ Edit';eb.onclick=()=>editTasks(day,name);td.append(eb);}tr.append(td);} );tb.append(tr);} );Object.entries(taskStatuses).forEach(([i,s])=>updateTaskUI(i,s));}
+    function renderChores(){const tb=document.getElementById('chore-body'), todayName=new Date().toLocaleDateString('en-US',{weekday:'long'}), fullDate=new Date().toLocaleDateString(); tb.innerHTML=''; ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].forEach(day=>{const tr=document.createElement('tr'); if(day===todayName) tr.classList.add('highlight-row'); const tdDay=document.createElement('td'); tdDay.textContent=day===todayName?`${day} (${fullDate})`:day; tr.append(tdDay); ['Jacob','Jalyna','Josh','Jeremy'].forEach(name=>{const td=document.createElement('td'), list=chores[day]?.[name]||[]; if(!list.length) td.innerHTML='<em>Free</em>'; else list.forEach((task,i)=>{const id=`${name.toLowerCase()}-${day.toLowerCase()}-${i}`,dv=document.createElement('div'); dv.className='task'; const cb=document.createElement('input'); cb.type='checkbox'; cb.id=id+'-checkbox'; cb.onchange=()=>toggleTask(cb,id); const lb=document.createElement('label'); lb.htmlFor=id+'-checkbox'; lb.textContent=task; const ts=document.createElement('span'); ts.id=id+'-timer'; ts.className='timer'; const ss=document.createElement('span'); ss.id=id+'-status'; dv.append(cb,lb,ts,ss); if(isParent){const ap=document.createElement('button'); ap.id=id+'-approve'; ap.textContent='Approve'; ap.style.display='none'; ap.onclick=()=>approveTask(id); dv.append(ap); const tbB=document.createElement('button'); tbB.textContent='⏱️ Set Timer'; tbB.onclick=()=>setTaskTimer(id); dv.append(tbB);} td.append(dv);} ); if(isParent){const eb=document.createElement('button'); eb.textContent='✏️ Edit'; eb.onclick=()=>editTasks(day,name); td.append(eb);} tr.append(td);} ); tb.append(tr);} ); Object.entries(taskStatuses).forEach(([i,s])=>updateTaskUI(i,s)); }
 
     // Init
-    document.addEventListener('DOMContentLoaded',()=>{if(isParent)document.getElementById('toggle-checkbox').checked=document.body.classList.contains('dark');db.ref('weeklyChores').on('value',snap=>{chores=snap.val()||{};renderChores();});db.ref('tasks').on('value',snap=>{taskStatuses=snap.val()||{};renderChores();});db.ref('timers').on('value',snap=>{timers=snap.val()||{};updateTimers();});updateRecycling();fetchWeather();});
+    document.addEventListener('DOMContentLoaded',()=>{ if(isParent) document.getElementById('toggle-checkbox').checked = document.body.classList.contains('dark'); db.ref('weeklyChores').on('value',snap=>{ chores=snap.val()||{}; renderChores(); }); db.ref('tasks').on('value',snap=>{ taskStatuses=snap.val()||{}; renderChores(); }); db.ref('timers').on('value',snap=>{ timers=snap.val()||{}; updateTimers(); }); updateRecycling(); fetchWeather(); });
   </script>
 </body>
 </html>
-
