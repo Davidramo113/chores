@@ -47,7 +47,6 @@
       color: var(--text-dark);
     }
     body.dark th, body.dark td {
-      color: var(--text-dark);
       background-color: #333;
       border-color: #555;
     }
@@ -179,7 +178,7 @@
   <div class="garbage-note">
     🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete.
   </div>
-  <div class="weather-alert">⛅ <strong>Weather:</strong> Loading forecast...</div>
+  <div class="weather-alert">⛅ Loading today's forecast...</div>
 
   <div style="text-align: center; margin-top: 15px;">
     <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true"
@@ -321,116 +320,41 @@
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${disp}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
-    // Weather for every day
+    // Today's weather in °F only
     const weatherConfig = {
       latitude: 40.8485,
       longitude: -73.149,
       timezone: "America/New_York"
     };
-
-    async function fetchWeatherAlerts() {
+    async function fetchWeatherToday() {
       try {
-        const { latitude, longitude, timezone } = weatherConfig;
+        const today = new Date().toISOString().split("T")[0];
         const url = new URL("https://api.open-meteo.com/v1/forecast");
-        url.searchParams.set("latitude", latitude);
-        url.searchParams.set("longitude", longitude);
+        url.searchParams.set("latitude", weatherConfig.latitude);
+        url.searchParams.set("longitude", weatherConfig.longitude);
         url.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,precipitation_probability_max");
-        url.searchParams.set("timezone", timezone);
+        url.searchParams.set("temperature_unit", "fahrenheit");
+        url.searchParams.set("timezone", weatherConfig.timezone);
+        url.searchParams.set("start_date", today);
+        url.searchParams.set("end_date", today);
 
         const res = await fetch(url);
         const data = await res.json();
-
-        const dates     = data.daily.time;
-        const maxTemps  = data.daily.temperature_2m_max;
-        const minTemps  = data.daily.temperature_2m_min;
-        const precips   = data.daily.precipitation_probability_max;
-
-        let html = "";
-        dates.forEach((dateStr, idx) => {
-          const d       = new Date(dateStr);
-          const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
-          const max     = Math.round(maxTemps[idx]);
-          const min     = Math.round(minTemps[idx]);
-          const precip  = precips[idx];
-          html += `<strong>${dayName}</strong>: High ${max}°C, Low ${min}°C, ${precip}% precip<br/>`;
-        });
-
+        const date    = data.daily.time[0];
+        const maxF    = Math.round(data.daily.temperature_2m_max[0]);
+        const minF    = Math.round(data.daily.temperature_2m_min[0]);
+        const pct     = data.daily.precipitation_probability_max[0];
+        const d       = new Date(date);
+        const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
         const container = document.querySelector(".weather-alert");
         if (container) {
-          container.innerHTML = html;
+          container.innerHTML =
+            `<strong>${dayName} (${date}):</strong> ` +
+            `High ${maxF}°F, Low ${minF}°F, ${pct}% precip`;
         }
       } catch (err) {
         console.error("Weather fetch failed:", err);
       }
-    }
-
-    function renderChores() {
-      const tb    = document.getElementById("chore-body"),
-            today = new Date().toLocaleDateString('en-US',{ weekday:'long' }),
-            fd    = new Date().toLocaleDateString();
-      tb.innerHTML = "";
-      ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].forEach(day => {
-        const tr = document.createElement("tr");
-        if (day === today) tr.classList.add("highlight-row");
-        const tdDay = document.createElement("td");
-        tdDay.textContent = day === today ? `${day} (${fd})` : day;
-        tr.append(tdDay);
-
-        ["Jacob","Jalyna","Josh","Jeremy"].forEach(name => {
-          const td   = document.createElement("td"),
-                list = chores[day]?.[name] || [];
-          if (!list.length) td.innerHTML = "<em>Free</em>";
-          else list.forEach((task, i) => {
-            const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`,
-                  dv = document.createElement("div");
-            dv.className = "task";
-            const lb = document.createElement("label"),
-                  cb = document.createElement("input");
-            cb.type = "checkbox"; cb.id = `${id}-checkbox`; cb.onchange = () => toggleTask(cb, id);
-            lb.append(cb, document.createTextNode(task));
-
-            const ts = document.createElement("span");
-            ts.id = `${id}-timer`; ts.className = "timer";
-
-            const ss = document.createElement("span");
-            ss.id = `${id}-status`;
-
-            dv.append(lb, ts, ss);
-
-            if (isParent) {
-              const ab = document.createElement("button");
-              ab.id = `${id}-approve`;
-              ab.textContent = "Approve";
-              ab.style.display = "none";
-              ab.onclick = () => approveTask(id);
-              dv.append(ab);
-
-              const tbBtn = document.createElement("button");
-              tbBtn.textContent = "⏱️ Set Timer";
-              tbBtn.className = "set-timer-btn";
-              tbBtn.onclick = () => setTaskTimer(id);
-              dv.append(tbBtn);
-            }
-
-            td.append(dv);
-          });
-
-          if (isParent) {
-            const eb = document.createElement("button");
-            eb.textContent = "✏️ Edit";
-            eb.style.marginTop = "5px";
-            eb.style.fontSize = "12px";
-            eb.onclick = () => editTasks(day, name);
-            td.append(eb);
-          }
-
-          tr.append(td);
-        });
-
-        tb.append(tr);
-      });
-
-      Object.entries(taskStatuses).forEach(([id, st]) => updateTaskUI(id, st));
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -439,7 +363,7 @@
       db.ref("tasks").on("value", snap => { taskStatuses = snap.val() || {}; renderChores(); });
       db.ref("timers").on("value", snap => { timers = snap.val() || {}; updateTimerDisplays(); });
       updateRecyclingNote();
-      fetchWeatherAlerts();
+      fetchWeatherToday();
     });
   </script>
 </body>
