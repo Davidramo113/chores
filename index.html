@@ -42,11 +42,11 @@
       width: 100%;
       border-collapse: collapse;
       background: var(--table-light);
-      border: 1px solid var(--border); /* Ensures a border around the table */
+      border: 1px solid var(--border);
     }
 
     table, th, td {
-      border: 1px solid var(--border); /* Borders around cells */
+      border: 1px solid var(--border);
     }
 
     body.dark table {
@@ -57,7 +57,7 @@
     body.dark th, body.dark td {
       color: var(--text-dark);
       background-color: #333;
-      border-color: #555; /* Darker border color for dark mode */
+      border-color: #555;
     }
 
     th, td {
@@ -67,7 +67,7 @@
 
     th {
       background: #eee;
-      border: 1px solid var(--border); /* Ensure th borders are visible */
+      border: 1px solid var(--border);
     }
 
     .task {
@@ -170,6 +170,16 @@
     input:checked + .slider {
       background-color: #4caf50;
     }
+
+    /* Weather alert styling override */
+    .weather-alert {
+      margin-top: 0.5em;
+      padding: 0.5em 1em;
+      background: #fffae6;
+      border-left: 4px solid #f5c518;
+      font-weight: bold;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -239,10 +249,10 @@
     }
 
     function formatTimeLeft(ms) {
-      const totalSeconds = Math.max(0, Math.floor(ms / 1000)); // Total time in seconds
-      const hours = Math.floor(totalSeconds / 3600); // Calculate hours
-      const minutes = Math.floor((totalSeconds % 3600) / 60); // Calculate minutes
-      const seconds = totalSeconds % 60; // Remaining seconds
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
@@ -259,35 +269,27 @@
     }
     setInterval(updateTimerDisplays, 1000);
 
-    // Timer function that allows parents to set timers
     function setTaskTimer(id) {
-      if (!isParent) return; // Only allow parents to set timers
-
+      if (!isParent) return;
       const minutes = prompt("Set timer in minutes:");
-      const duration = parseInt(minutes); // Convert the input to an integer
-
+      const duration = parseInt(minutes);
       if (!isNaN(duration) && duration > 0) {
-        const expiresAt = Date.now() + duration * 60000; // Set expiration time based on the current time and the input minutes
-
-        // Update the timer in Firebase
+        const expiresAt = Date.now() + duration * 60000;
         db.ref("timers/" + id).set(expiresAt);
       } else {
-        alert("Please enter a valid number of minutes."); // Alert if the input is not valid
+        alert("Please enter a valid number of minutes.");
       }
     }
 
-    // Function to sync task status to Firebase
     function syncTask(id, status) {
       db.ref("tasks/" + id).set(status);
     }
 
-    // Function to update task UI when status changes
     function updateTaskUI(id, status) {
       const cb = document.getElementById(`${id}-checkbox`),
             sp = document.getElementById(`${id}-status`),
             btn = document.getElementById(`${id}-approve`);
       if (!cb || !sp) return;
-
       if (status === "approved") {
         cb.checked = true;
         cb.disabled = true;
@@ -308,7 +310,6 @@
       }
     }
 
-    // Functions to toggle task state and approve task
     function toggleTask(cb, id) {
       const st = cb.checked ? "pending" : "";
       syncTask(id, st);
@@ -321,7 +322,6 @@
       updateTaskUI(id, "approved");
     }
 
-    // Function to reset all tasks
     function resetAllTasks() {
       if (!isParent) return;
       if (confirm("Reset all tasks?")) {
@@ -330,7 +330,6 @@
       }
     }
 
-    // Function to edit tasks
     function editTasks(day, name) {
       if (!isParent) return;
       const current = chores[day]?.[name]?.join(", ") || "";
@@ -342,7 +341,6 @@
       }
     }
 
-    // Function to update recycling note
     function updateRecyclingNote() {
       const note = document.querySelector(".recycling-note");
       if (!note) return;
@@ -358,57 +356,48 @@
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${disp}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
-    // Fetch weather updates (optional)
-  async function fetchWeather() {
-  try {
-    const latitude = 40.8584; // Your location latitude (Centereach, Long Island)
-    const longitude = -73.2123; // Your location longitude (Centereach, Long Island)
+    // Weather alerts for garbage/recycling nights
+    const weatherConfig = {
+      latitude: 40.8485,
+      longitude: -73.149,
+      timezone: "America/New_York",
+      alertDays: ["Sunday", "Tuesday", "Wednesday"],
+      precipThreshPct: 30
+    };
 
-    // Fetch weather data from Open-Meteo API
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&temperature_unit=celsius&timezone=America/New_York`);
-    const data = await res.json();
+    async function fetchWeatherAlerts() {
+      try {
+        const { latitude, longitude, timezone, alertDays, precipThreshPct } = weatherConfig;
+        const url = new URL("https://api.open-meteo.com/v1/forecast");
+        url.searchParams.set("latitude", latitude);
+        url.searchParams.set("longitude", longitude);
+        url.searchParams.set("daily", "precipitation_probability_max");
+        url.searchParams.set("timezone", timezone);
 
-    // Log the entire API response to understand the structure
-    console.log("Weather Data:", data);
+        const res = await fetch(url);
+        const data = await res.json();
+        const dates = data.daily.time;
+        const probs = data.daily.precipitation_probability_max;
+        let html = "";
 
-    // Check if 'data.daily' exists and is an array
-    if (!data.daily || !Array.isArray(data.daily)) {
-      console.error("Weather data not in the expected format", data);
-      return;
+        dates.forEach((dateStr, idx) => {
+          const d = new Date(dateStr);
+          const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
+          const pct = probs[idx];
+          if (alertDays.includes(dayName) && pct >= precipThreshPct) {
+            html += `⚠️ ${dayName} night: ${pct}% chance of rain—plan accordingly!<br />`;
+          }
+        });
+
+        const container = document.querySelector(".weather-alert");
+        if (container) {
+          container.innerHTML = html || "⛅ No significant precipitation expected on trash/recycling nights.";
+        }
+      } catch (err) {
+        console.error("Weather fetch failed:", err);
+      }
     }
 
-    // Prepare the weather information to display
-    const weatherMessages = data.daily.map((forecast) => {
-      const date = forecast.date;
-      const maxTemp = Math.round(forecast.temperature_2m_max); // Max temperature for the day
-      const minTemp = Math.round(forecast.temperature_2m_min); // Min temperature for the day
-      const precipitation = forecast.precipitation_sum;
-      const windSpeed = forecast.windspeed_10m_max;
-
-      let weatherMessage = `<strong>${date}:</strong> High: ${maxTemp}°C, Low: ${minTemp}°C`;
-
-      if (precipitation > 0) {
-        weatherMessage += ` 🌧️ Rain expected: ${precipitation} mm`;
-      }
-
-      if (windSpeed >= 15) {
-        weatherMessage += ` 💨 Windy: Max wind speed: ${windSpeed} km/h`;
-      }
-
-      return weatherMessage;
-    });
-
-    // Display weather messages in the weather alert section
-    const weatherInfoDiv = document.querySelector(".weather-alert");
-    if (weatherInfoDiv) {
-      weatherInfoDiv.innerHTML = weatherMessages.join("<br>");
-    }
-
-  } catch (e) {
-    console.warn("Weather error:", e);
-  }
-}
-    // Function to render chores in the table
     function renderChores() {
       const tb = document.getElementById("chore-body"),
             today = new Date().toLocaleDateString('en-US', { weekday: 'long' }),
@@ -452,14 +441,13 @@
       Object.entries(taskStatuses).forEach(([id, st]) => updateTaskUI(id, st));
     }
 
-    // Initialize and load data
     document.addEventListener("DOMContentLoaded", () => {
       if (isParent) document.getElementById("rotate-section").style.display = "block";
       db.ref("weeklyChores").on("value", snap => { chores = snap.val() || {}; renderChores(); });
       db.ref("tasks").on("value", snap => { taskStatuses = snap.val() || {}; renderChores(); });
       db.ref("timers").on("value", snap => { timers = snap.val() || {}; updateTimerDisplays(); });
       updateRecyclingNote();
-      fetchWeather();
+      fetchWeatherAlerts();
     });
   </script>
 </body>
