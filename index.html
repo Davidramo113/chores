@@ -7,19 +7,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-    }
+    /* Reset & theme variables */
+    body, html { margin: 0; padding: 0; }
     :root {
-      --bg-light: #f0f0f0;
-      --bg-dark: #1e1e1e;
-      --text-light: #000;
-      --text-dark: #fff;
-      --table-light: #fff;
-      --table-dark: #2a2a2a;
-      --border: #ccc;
-      --accent: green;
+      --bg-light: #f0f0f0; --bg-dark: #1e1e1e;
+      --text-light: #000;  --text-dark: #fff;
+      --table-light: #fff; --table-dark: #2a2a2a;
+      --border:   #ccc;    --accent:     green;
       --highlight: #d1ffd1;
     }
     body {
@@ -33,6 +27,8 @@
       background: var(--bg-dark);
       color: var(--text-dark);
     }
+
+    /* Table styles */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -54,9 +50,9 @@
       padding: 10px;
       text-align: center;
     }
-    th {
-      background: #eee;
-    }
+    th { background: #eee; }
+
+    /* Task item */
     .task {
       display: flex;
       justify-content: space-between;
@@ -64,41 +60,43 @@
       flex-wrap: wrap;
       gap: 6px;
     }
-    .approved {
-      color: var(--accent);
-      font-weight: bold;
-    }
-    .timer {
-      font-size: 12px;
-      color: #c00;
-    }
+    .approved { color: var(--accent); font-weight: bold; }
+    .timer { font-size: 12px; color: #c00; }
     .set-timer-btn {
       font-size: 11px;
       padding: 2px 6px;
       margin-top: 4px;
     }
-    h1 {
+
+    /* Highlight today */
+    .highlight-row {
+      background-color: var(--highlight) !important;
+    }
+
+    /* Notes & alerts */
+    .recycling-note,
+    .garbage-note,
+    .weather-alert {
+      margin-top: 20px;
+      font-size: 14px;
       text-align: center;
-      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .weather-alert {
+      margin-top: 0.5em;
+      padding: 0.5em 1em;
+      background: #fffae6;
+      border-left: 4px solid #f5c518;
+      font-weight: bold;
+      border-radius: 4px;
     }
     .footer-note {
       margin-top: 30px;
       text-align: center;
       font-style: italic;
     }
-    #reset-section, #rotate-section {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .highlight-row {
-      background-color: var(--highlight) !important;
-    }
-    .recycling-note, .garbage-note, .weather-alert {
-      margin-top: 20px;
-      font-size: 14px;
-      text-align: center;
-      line-height: 1.6;
-    }
+
+    /* Theme switch */
     .theme-switch {
       position: absolute;
       top: 20px;
@@ -110,16 +108,11 @@
       font-weight: bold;
       color: var(--text-light);
     }
-    body.dark .theme-switch {
-      color: var(--text-dark);
-    }
-    .theme-switch input {
-      display: none;
-    }
+    body.dark .theme-switch { color: var(--text-dark); }
+    .theme-switch input { display: none; }
     .slider {
       position: relative;
-      width: 50px;
-      height: 25px;
+      width: 50px; height: 25px;
       background-color: #ccc;
       border-radius: 25px;
       cursor: pointer;
@@ -128,12 +121,10 @@
     .slider::before {
       content: "";
       position: absolute;
-      width: 21px;
-      height: 21px;
+      width: 21px; height: 21px;
       border-radius: 50%;
       background-color: white;
-      top: 2px;
-      left: 2px;
+      top: 2px; left: 2px;
       transition: transform 0.3s;
     }
     input:checked + .slider::before {
@@ -141,14 +132,6 @@
     }
     input:checked + .slider {
       background-color: #4caf50;
-    }
-    .weather-alert {
-      margin-top: 0.5em;
-      padding: 0.5em 1em;
-      background: #fffae6;
-      border-left: 4px solid #f5c518;
-      font-weight: bold;
-      border-radius: 4px;
     }
   </style>
 </head>
@@ -162,29 +145,34 @@
 
   <table>
     <thead>
-      <tr><th>Day</th><th>Jacob</th><th>Jalyna</th><th>Josh</th><th>Jeremy</th></tr>
+      <tr>
+        <th>Day</th>
+        <th>Jacob</th>
+        <th>Jalyna</th>
+        <th>Josh</th>
+        <th>Jeremy</th>
+      </tr>
     </thead>
     <tbody id="chore-body"></tbody>
   </table>
 
-  <div id="rotate-section" style="display: none;">
-    <button onclick="rotateChores()" style="padding: 10px 20px; font-size: 16px;">🔁 Rotate Tasks</button>
+  <div id="rotate-section" style="display: none; text-align: center; margin-top:20px;">
+    <button onclick="rotateChores()" style="padding:10px 20px; font-size:16px;">🔁 Rotate Tasks</button>
   </div>
-  <div id="reset-section">
-    <button onclick="resetAllTasks()" style="padding: 10px 20px; font-size: 16px;">Reset All Tasks</button>
+  <div id="reset-section" style="text-align:center; margin-top:20px;">
+    <button onclick="resetAllTasks()" style="padding:10px 20px; font-size:16px;">Reset All Tasks</button>
   </div>
 
   <div class="recycling-note">♻️ <strong>Recycling:</strong> Loading next pickup info...</div>
   <div class="garbage-note">
-    🗑️ <strong>Garbage Instructions:</strong> Garbage must be taken out before 9:00 PM the night before pickup. If not done, Wi-Fi may be disabled until complete.
+    🗑️ <strong>Garbage Instructions:</strong> Must be out by 9:00 PM night before pickup. Wi-Fi may be disabled if missed.
   </div>
   <div class="weather-alert">⛅ Loading today's forecast...</div>
 
-  <div style="text-align: center; margin-top: 15px;">
+  <div style="text-align:center; margin-top:15px;">
     <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true"
-       target="_blank"
-       rel="noopener noreferrer"
-       style="font-size: 16px; color: green; display: block;">
+       target="_blank" rel="noopener noreferrer"
+       style="font-size:16px; color:green; display:block;">
       📄 View Cleaning Standards for Task Approval
     </a>
   </div>
@@ -194,6 +182,7 @@
   </div>
 
   <script>
+    // — Firebase Init —
     const firebaseConfig = {
       apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
       authDomain: "chores-c86f4.firebaseapp.com",
@@ -207,161 +196,214 @@
     const db = firebase.database();
     const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
 
+    // — State —
     let chores = {}, taskStatuses = {}, timers = {};
 
+    // — Theme Toggle —
     function toggleTheme() {
       document.body.classList.toggle("dark");
-      const isDark = document.body.classList.contains("dark");
-      document.getElementById("mode-label").textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
-      document.getElementById("toggle-checkbox").checked = isDark;
+      const dark = document.body.classList.contains("dark");
+      document.getElementById("mode-label").textContent = dark ? "☀️ Light Mode" : "🌙 Dark Mode";
+      document.getElementById("toggle-checkbox").checked = dark;
     }
 
+    // — Timer Helpers —
     function formatTimeLeft(ms) {
-      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-      return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+      const sec = Math.max(0, Math.floor(ms/1000));
+      const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+      return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
     }
-
     function updateTimerDisplays() {
       const now = Date.now();
-      for (const id in timers) {
-        const expiresAt = timers[id];
-        const timeLeft = expiresAt - now;
-        const timerSpan = document.getElementById(`${id}-timer`);
-        if (timerSpan) {
-          timerSpan.textContent = timeLeft > 0 ? `⏳ ${formatTimeLeft(timeLeft)}` : "";
-        }
+      for (let id in timers) {
+        const span = document.getElementById(`${id}-timer`);
+        if (!span) continue;
+        const left = timers[id] - now;
+        span.textContent = left>0 ? `⏳ ${formatTimeLeft(left)}` : "";
       }
     }
     setInterval(updateTimerDisplays, 1000);
-
     function setTaskTimer(id) {
       if (!isParent) return;
-      const minutes = prompt("Set timer in minutes:");
-      const duration = parseInt(minutes);
-      if (!isNaN(duration) && duration > 0) {
-        db.ref("timers/" + id).set(Date.now() + duration * 60000);
+      const mins = parseInt(prompt("Set timer in minutes:"));
+      if (mins>0) db.ref("timers/"+id).set(Date.now()+mins*60000);
+      else alert("Please enter a valid number.");
+    }
+
+    // — Task Sync/UI —
+    function syncTask(id,status){ db.ref("tasks/"+id).set(status); }
+    function updateTaskUI(id,status){
+      const cb = document.getElementById(`${id}-checkbox`);
+      const st = document.getElementById(`${id}-status`);
+      const btn= document.getElementById(`${id}-approve`);
+      if(!cb||!st) return;
+      if(status==="approved"){
+        cb.checked=true; cb.disabled=true;
+        st.textContent="✅ Approved"; st.classList.add("approved");
+        if(btn) btn.style.display="none";
+      } else if(status==="pending"){
+        cb.checked=true; cb.disabled=false;
+        st.textContent="Pending";
+        if(btn&&isParent) btn.style.display="inline-block";
+        else if(btn) btn.style.display="none";
       } else {
-        alert("Please enter a valid number of minutes.");
+        cb.checked=false; cb.disabled=false;
+        st.textContent="";
+        if(btn) btn.style.display="none";
       }
     }
-
-    function syncTask(id, status) {
-      db.ref("tasks/" + id).set(status);
+    function toggleTask(cb,id){
+      const s = cb.checked?"pending":"";
+      syncTask(id,s);
+      updateTaskUI(id,s);
+    }
+    function approveTask(id){
+      if(!isParent) return;
+      syncTask(id,"approved");
+      updateTaskUI(id,"approved");
     }
 
-    function updateTaskUI(id, status) {
-      const cb = document.getElementById(`${id}-checkbox`),
-            sp = document.getElementById(`${id}-status`),
-            btn = document.getElementById(`${id}-approve`);
-      if (!cb || !sp) return;
-      if (status === "approved") {
-        cb.checked = true;
-        cb.disabled = true;
-        sp.textContent = "✅ Approved";
-        sp.classList.add("approved");
-        if (btn) btn.style.display = "none";
-      } else if (status === "pending") {
-        cb.checked = true;
-        cb.disabled = false;
-        sp.textContent = "Pending";
-        if (btn && isParent) btn.style.display = "inline-block";
-        else if (btn) btn.style.display = "none";
-      } else {
-        cb.checked = false;
-        cb.disabled = false;
-        sp.textContent = "";
-        if (btn) btn.style.display = "none";
-      }
-    }
-
-    function toggleTask(cb, id) {
-      const st = cb.checked ? "pending" : "";
-      syncTask(id, st);
-      updateTaskUI(id, st);
-    }
-    function approveTask(id) {
-      if (!isParent) return;
-      syncTask(id, "approved");
-      updateTaskUI(id, "approved");
-    }
-    function resetAllTasks() {
-      if (!isParent) return;
-      if (confirm("Reset all tasks?")) {
+    // — Reset & Edit —
+    function resetAllTasks(){
+      if(!isParent) return;
+      if(confirm("Reset all tasks?")){
         db.ref("tasks").remove();
         location.reload();
       }
     }
-    function editTasks(day, name) {
-      if (!isParent) return;
-      const current = chores[day]?.[name]?.join(", ") || "";
-      const input = prompt(`Edit tasks for ${name} on ${day} (comma-separated):`, current);
-      if (input !== null) {
-        const updated = input.split(",").map(t => t.trim()).filter(t => t);
-        chores[day][name] = updated;
-        db.ref(`weeklyChores/${day}/${name}`).set(updated);
+    function editTasks(day,name){
+      if(!isParent) return;
+      const cur = (chores[day]?.[name]||[]).join(", ");
+      const val = prompt(`Edit ${name} on ${day}:`, cur);
+      if(val!==null){
+        const arr = val.split(",").map(t=>t.trim()).filter(t=>t);
+        chores[day][name] = arr;
+        db.ref(`weeklyChores/${day}/${name}`).set(arr);
       }
     }
 
-    function updateRecyclingNote() {
+    // — Recycling Note —
+    function updateRecyclingNote(){
       const note = document.querySelector(".recycling-note");
-      if (!note) return;
-      const now = new Date(), wed = new Date(now);
-      wed.setDate(wed.getDate() + ((3 - now.getDay() + 7) % 7));
+      if(!note) return;
+      const now=new Date(), wed=new Date(now);
+      wed.setDate(wed.getDate()+((3-now.getDay()+7)%7));
       wed.setHours(6,0,0,0);
-      const pd = now < wed ? wed : new Date(wed.getTime() + 7*86400000);
-      const sd = new Date("2025-05-15T06:00:00");
-      const types = ["Paper/Cardboard","Plastic/Metal"],
-            weeks = Math.round((pd - sd) / (7*86400000)),
-            type = types[weeks % 2],
-            disp = pd.toLocaleDateString('en-US',{ month:'long',day:'numeric' });
-      note.innerHTML = `♻️ <strong>Recycling (Tuesday Night - ${disp}):</strong> Next pickup for <strong>${type}</strong>.`;
+      const pd = now<wed ? wed : new Date(wed.getTime()+7*86400000);
+      const start=new Date("2025-05-15T06:00:00");
+      const types=["Paper/Cardboard","Plastic/Metal"];
+      const weeks = Math.round((pd-start)/(7*86400000));
+      const type = types[weeks%2];
+      const d = pd.toLocaleDateString('en-US',{month:'long',day:'numeric'});
+      note.innerHTML = `♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
-    // Today's weather in °F only
+    // — Today's Weather in °F —
     const weatherConfig = {
       latitude: 40.8485,
       longitude: -73.149,
       timezone: "America/New_York"
     };
-    async function fetchWeatherToday() {
-      try {
+    async function fetchWeatherToday(){
+      try{
         const today = new Date().toISOString().split("T")[0];
         const url = new URL("https://api.open-meteo.com/v1/forecast");
-        url.searchParams.set("latitude", weatherConfig.latitude);
-        url.searchParams.set("longitude", weatherConfig.longitude);
-        url.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,precipitation_probability_max");
-        url.searchParams.set("temperature_unit", "fahrenheit");
-        url.searchParams.set("timezone", weatherConfig.timezone);
-        url.searchParams.set("start_date", today);
-        url.searchParams.set("end_date", today);
-
+        url.searchParams.set("latitude",        weatherConfig.latitude);
+        url.searchParams.set("longitude",       weatherConfig.longitude);
+        url.searchParams.set("daily",           "temperature_2m_max,temperature_2m_min,precipitation_probability_max");
+        url.searchParams.set("temperature_unit","fahrenheit");
+        url.searchParams.set("timezone",        weatherConfig.timezone);
+        url.searchParams.set("start_date",      today);
+        url.searchParams.set("end_date",        today);
         const res = await fetch(url);
         const data = await res.json();
-        const date    = data.daily.time[0];
-        const maxF    = Math.round(data.daily.temperature_2m_max[0]);
-        const minF    = Math.round(data.daily.temperature_2m_min[0]);
-        const pct     = data.daily.precipitation_probability_max[0];
-        const d       = new Date(date);
-        const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
-        const container = document.querySelector(".weather-alert");
-        if (container) {
-          container.innerHTML =
-            `<strong>${dayName} (${date}):</strong> ` +
-            `High ${maxF}°F, Low ${minF}°F, ${pct}% precip`;
+        const date = data.daily.time[0];
+        const maxF = Math.round(data.daily.temperature_2m_max[0]);
+        const minF = Math.round(data.daily.temperature_2m_min[0]);
+        const pct  = data.daily.precipitation_probability_max[0];
+        const d    = new Date(date);
+        const name = d.toLocaleDateString("en-US",{weekday:"long"});
+        const c    = document.querySelector(".weather-alert");
+        if(c){
+          c.innerHTML = `<strong>${name} (${date}):</strong> High ${maxF}°F, Low ${minF}°F, ${pct}% precip`;
         }
-      } catch (err) {
-        console.error("Weather fetch failed:", err);
+      } catch(e){
+        console.error("Weather fetch failed:", e);
       }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      if (isParent) document.getElementById("rotate-section").style.display = "block";
-      db.ref("weeklyChores").on("value", snap => { chores = snap.val() || {}; renderChores(); });
-      db.ref("tasks").on("value", snap => { taskStatuses = snap.val() || {}; renderChores(); });
-      db.ref("timers").on("value", snap => { timers = snap.val() || {}; updateTimerDisplays(); });
+    // — Render chores table —
+    function renderChores(){
+      const tb = document.getElementById("chore-body");
+      const today = new Date().toLocaleDateString('en-US',{weekday:'long'});
+      const fd = new Date().toLocaleDateString();
+      tb.innerHTML = "";
+      ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].forEach(day=>{
+        const tr = document.createElement("tr");
+        if(day===today) tr.classList.add("highlight-row");
+        const tdDay = document.createElement("td");
+        tdDay.textContent = day===today ? `${day} (${fd})` : day;
+        tr.append(tdDay);
+
+        ["Jacob","Jalyna","Josh","Jeremy"].forEach(name=>{
+          const td = document.createElement("td");
+          const list = chores[day]?.[name]||[];
+          if(!list.length){
+            td.innerHTML="<em>Free</em>";
+          } else {
+            list.forEach((task,i)=>{
+              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
+              const dv = document.createElement("div");
+              dv.className="task";
+              const lb = document.createElement("label");
+              const cb = document.createElement("input");
+              cb.type="checkbox";
+              cb.id=`${id}-checkbox`;
+              cb.onchange=()=>toggleTask(cb,id);
+              lb.append(cb, document.createTextNode(task));
+              const ts = document.createElement("span");
+              ts.id=`${id}-timer`;
+              ts.className="timer";
+              const ss = document.createElement("span");
+              ss.id=`${id}-status`;
+              dv.append(lb, ts, ss);
+              if(isParent){
+                const ap = document.createElement("button");
+                ap.id=`${id}-approve`;
+                ap.textContent="Approve";
+                ap.style.display="none";
+                ap.onclick=()=>approveTask(id);
+                dv.append(ap);
+                const tbBtn = document.createElement("button");
+                tbBtn.textContent="⏱️ Set Timer";
+                tbBtn.className="set-timer-btn";
+                tbBtn.onclick=()=>setTaskTimer(id);
+                dv.append(tbBtn);
+              }
+              td.append(dv);
+            });
+          }
+          if(isParent){
+            const eb = document.createElement("button");
+            eb.textContent="✏️ Edit";
+            eb.style.marginTop="5px";
+            eb.style.fontSize="12px";
+            eb.onclick=()=>editTasks(day,name);
+            td.append(eb);
+          }
+          tr.append(td);
+        });
+        tb.append(tr);
+      });
+      Object.entries(taskStatuses).forEach(([id,st])=>updateTaskUI(id,st));
+    }
+
+    // — Init —
+    document.addEventListener("DOMContentLoaded",()=>{
+      if(isParent) document.getElementById("rotate-section").style.display="block";
+      db.ref("weeklyChores").on("value", snap=>{ chores=snap.val()||{}; renderChores(); });
+      db.ref("tasks").on("value",      snap=>{ taskStatuses=snap.val()||{}; renderChores(); });
+      db.ref("timers").on("value",     snap=>{ timers=snap.val()||{}; updateTimerDisplays(); });
       updateRecyclingNote();
       fetchWeatherToday();
     });
