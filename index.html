@@ -28,6 +28,7 @@
       background: var(--bg-light);
       color: var(--text-light);
       transition: background 0.3s, color 0.3s;
+      height: 100%;
     }
     body.dark {
       background: var(--bg-dark);
@@ -45,26 +46,31 @@
     .table-container {
       max-width: 1200px;
       margin: auto;
-      overflow: hidden;
-      border-radius: 8px;
       background: #fff;
+      border-radius: 8px;
       box-shadow: 0 8px 16px var(--card-shadow);
       animation: fadeIn 0.8s ease-out;
+      max-height: 70vh;
+      overflow-y: auto;
+      overflow-x: auto;
     }
     table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 800px;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--accent) !important;
+      color: #fff;
+      z-index: 2;
     }
     th, td {
       padding: 16px;
       border-bottom: 1px solid var(--border);
       text-align: center;
       animation: fadeInUp 0.5s ease-out;
-    }
-    th {
-      background: var(--accent);
-      color: #fff;
-      font-weight: 500;
     }
     tr:nth-child(even) td {
       background: rgba(0, 0, 0, 0.02);
@@ -156,8 +162,7 @@
       content: "✔";
       color: #fff;
       position: absolute;
-      top: 0;
-      left: 3px;
+      top: 0; left: 3px;
       opacity: 0;
       transform: scale(0);
       transition: transform 0.2s ease, opacity 0.2s ease;
@@ -327,155 +332,26 @@
         if (btn) btn.style.display = 'none';
       }
     }
-    function toggleTask(cb, id) {
-      const s = cb.checked ? 'pending' : '';
-      syncTask(id, s);
-      updateTaskUI(id, s);
-    }
-    function approveTask(id) {
-      if (!isParent) return;
-      syncTask(id, 'approved');
-      updateTaskUI(id, 'approved');
-    }
+    function toggleTask(cb, id) { const s = cb.checked ? 'pending' : ''; syncTask(id,s); updateTaskUI(id,s); }
+    function approveTask(id) { if (!isParent) return; syncTask(id,'approved'); updateTaskUI(id,'approved'); }
 
     // Reset & edit
-    function resetAllTasks() {
-      if (!isParent) return;
-      if (confirm('Reset all tasks?')) {
-        db.ref('tasks').remove();
-        location.reload();
-      }
-    }
-    function editTasks(day,name) {
-      if (!isParent) return;
-      const current = (chores[day]?.[name]||[]).join(', ');
-      const val = prompt(`Edit ${name} on ${day}:`, current);
-      if (val !== null) {
-        const arr = val.split(',').map(x=>x.trim()).filter(x=>x);
-        chores[day][name] = arr;
-        db.ref(`weeklyChores/${day}/${name}`).set(arr);
-      }
-    }
+    function resetAllTasks() { if (!isParent) return; if (confirm('Reset all tasks?')){ db.ref('tasks').remove(); location.reload(); }}
+    function editTasks(day,name) { if (!isParent) return; const cur = (chores[day]?.[name]||[]).join(', '); const v = prompt(`Edit ${name} on ${day}:`,cur); if (v !== null) { const arr = v.split(',').map(x=>x.trim()).filter(x=>x); chores[day][name]=arr; db.ref(`weeklyChores/${day}/${name}`).set(arr);} }
 
     // Recycling note
-    function updateRecycling() {
-      const n = document.querySelector('.recycling-note');
-      if (!n) return;
-      const now = new Date(), wed = new Date(now);
-      wed.setDate(wed.getDate() + ((3 - now.getDay() + 7) % 7)); wed.setHours(6,0,0,0);
-      const pd = now < wed ? wed : new Date(wed.getTime() + 7*86400000);
-      const start = new Date('2025-05-15T06:00:00');
-      const types = ['Paper/Cardboard','Plastic/Metal'];
-      const weeks = Math.round((pd - start)/(7*86400000));
-      const type = types[weeks % 2];
-      const dStr = pd.toLocaleDateString('en-US',{month:'long',day:'numeric'});
-      n.innerHTML = `♻️ <strong>Recycling:</strong> ${type} on ${dStr}`;
-    }
+    function updateRecycling() { const n = document.querySelector('.recycling-note'); if (!n) return; const now=new Date(), wed=new Date(now); wed.setDate(wed.getDate()+((3-now.getDay()+7)%7)); wed.setHours(6,0,0,0); const pd=now<wed?wed:new Date(wed.getTime()+7*86400000); const start=new Date('2025-05-15T06:00:00'); const types=['Paper/Cardboard','Plastic/Metal']; const weeks=Math.round((pd-start)/(7*86400000)); const type=types[weeks%2]; const dStr=pd.toLocaleDateString('en-US',{month:'long',day:'numeric'}); n.innerHTML=`♻️ <strong>Recycling:</strong> ${type} on ${dStr}`; }
 
     // Weather fetch
-    const wCfg = { latitude:40.8485, longitude:-73.149, timezone:'America/New_York' };
-    const icons = {
-      0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
-      51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',
-      61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',
-      71:'❄️',73:'❄️',75:'❄️',77:'❄️',
-      80:'🌦️',81:'🌦️',82:'🌦️',
-      95:'⛈️',96:'⛈️',99:'⛈️'
-    };
-    async function fetchWeather() {
-      try {
-        const now = new Date();
-        const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
-        const ds = `${y}-${m}-${d}`;
-        const url = new URL('https://api.open-meteo.com/v1/forecast');
-        url.searchParams.set('latitude', wCfg.latitude);
-        url.searchParams.set('longitude', wCfg.longitude);
-        url.searchParams.set('daily', 'temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode');
-        url.searchParams.set('temperature_unit','fahrenheit');
-        url.searchParams.set('timezone', wCfg.timezone);
-        url.searchParams.set('start_date', ds);
-        url.searchParams.set('end_date', ds);
-        const res = await fetch(url);
-        const data = await res.json();
-        const date = data.daily.time[0];
-        const maxF = Math.round(data.daily.temperature_2m_max[0]);
-        const minF = Math.round(data.daily.temperature_2m_min[0]);
-        const pct  = data.daily.precipitation_probability_max[0];
-        const code = data.daily.weathercode[0];
-        const icon = icons[code] || '🌡️';
-        const [yy,mo,da] = date.split('-').map(Number);
-        const local = new Date(yy,mo-1,da);
-        const dayName = local.toLocaleDateString('en-US',{weekday:'long'});
-        document.querySelector('.weather-alert').innerHTML =
-          `<span class="weather-icon">${icon}</span>` +
-          `<div><strong>${dayName}</strong><br>` +
-          `High ${maxF}°F, Low ${minF}°F, ${pct}% precip</div>`;
-      } catch(e) {
-        console.error('Weather error:', e);
-      }
-    }
+    const wCfg={latitude:40.8485,longitude:-73.149,timezone:'America/New_York'}; const icons={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌦️',82:'🌦️',95:'⛈️',96:'⛈️',99:'⛈️'};
+    async function fetchWeather(){try{const now=new Date(),y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0'),d=String(now.getDate()).padStart(2,'0'),ds=`${y}-${m}-${d}`,url=new URL('https://api.open-meteo.com/v1/forecast');url.searchParams.set('latitude',wCfg.latitude);url.searchParams.set('longitude',wCfg.longitude);url.searchParams.set('daily','temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode');url.searchParams.set('temperature_unit','fahrenheit');url.searchParams.set('timezone',wCfg.timezone);url.searchParams.set('start_date',ds);url.searchParams.set('end_date',ds);const res=await fetch(url),data=await res.json(),date=data.daily.time[0],maxF=Math.round(data.daily.temperature_2m_max[0]),minF=Math.round(data.daily.temperature_2m_min[0]),pct=data.daily.precipitation_probability_max[0],code=data.daily.weathercode[0],icon=icons[code]||'🌡️',[yy,mo,da]=date.split('-').map(Number),local=new Date(yy,mo-1,da),dayName=local.toLocaleDateString('en-US',{weekday:'long'});document.querySelector('.weather-alert').innerHTML=`<span class="weather-icon">${icon}</span><div><strong>${dayName}</strong><br>High ${maxF}°F, Low ${minF}°F, ${pct}% precip</div>`;}catch(e){console.error('Weather error:',e);}}    
 
     // Render chores
-    function renderChores(){
-      const tb = document.getElementById('chore-body');
-      const todayName = new Date().toLocaleDateString('en-US',{weekday:'long'});
-      const fullDate = new Date().toLocaleDateString();
-      tb.innerHTML = '';
-      ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-        .forEach(day => {
-          const tr = document.createElement('tr');
-          if (day === todayName) tr.classList.add('highlight-row');
-          const tdDay = document.createElement('td');
-          tdDay.textContent = day === todayName ? `${day} (${fullDate})` : day;
-          tr.append(tdDay);
-          ['Jacob','Jalyna','Josh','Jeremy'].forEach(name => {
-            const td = document.createElement('td');
-            const list = chores[day]?.[name] || [];
-            if (!list.length) {
-              td.innerHTML = '<em>Free</em>';
-            } else {
-              list.forEach((task,i) => {
-                const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
-                const dv = document.createElement('div'); dv.className='task';
-                const cb = document.createElement('input'); cb.type='checkbox'; cb.id=id+'-checkbox';
-                cb.onchange = () => toggleTask(cb,id);
-                const lb = document.createElement('label'); lb.htmlFor=id+'-checkbox'; lb.textContent=task;
-                const ts = document.createElement('span'); ts.id=id+'-timer'; ts.className='timer';
-                const ss = document.createElement('span'); ss.id=id+'-status';
-                dv.append(cb, lb, ts, ss);
-                if (isParent) {
-                  const ap = document.createElement('button');
-                  ap.id=id+'-approve'; ap.textContent='Approve'; ap.style.display='none';
-                  ap.onclick = () => approveTask(id);
-                  dv.append(ap);
-                  const tbB = document.createElement('button');
-                  tbB.textContent='⏱️ Set Timer'; tbB.onclick = () => setTaskTimer(id);
-                  dv.append(tbB);
-                }
-                td.append(dv);
-              });
-            }
-            if (isParent) {
-              const eb = document.createElement('button');
-              eb.textContent='✏️ Edit'; eb.onclick = () => editTasks(day,name);
-              td.append(eb);
-            }
-            tr.append(td);
-          });
-          tb.append(tr);
-      });
-      Object.entries(taskStatuses).forEach(([i,s]) => updateTaskUI(i,s));
-    }
+    function renderChores(){const tb=document.getElementById('chore-body'),todayName=new Date().toLocaleDateString('en-US',{weekday:'long'}),fullDate=new Date().toLocaleDateString();tb.innerHTML='';['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].forEach(day=>{const tr=document.createElement('tr');if(day===todayName)tr.classList.add('highlight-row');const tdDay=document.createElement('td');tdDay.textContent=day===todayName?`${day} (${fullDate})`:day;tr.append(tdDay);['Jacob','Jalyna','Josh','Jeremy'].forEach(name=>{const td=document.createElement('td'),list=chores[day]?.[name]||[];if(!list.length)td.innerHTML='<em>Free</em>';else list.forEach((task,i)=>{const id=`${name.toLowerCase()}-${day.toLowerCase()}-${i}`,dv=document.createElement('div');dv.className='task';const cb=document.createElement('input');cb.type='checkbox';cb.id=id+'-checkbox';cb.onchange=()=>toggleTask(cb,id);const lb=document.createElement('label');lb.htmlFor=id+'-checkbox';lb.textContent=task;const ts=document.createElement('span');ts.id=id+'-timer';ts.className='timer';const ss=document.createElement('span');ss.id=id+'-status';dv.append(cb,lb,ts,ss);if(isParent){const ap=document.createElement('button');ap.id=id+'-approve';ap.textContent='Approve';ap.style.display='none';ap.onclick=()=>approveTask(id);dv.append(ap);const tbB=document.createElement('button');tbB.textContent='⏱️ Set Timer';tbB.onclick=()=>setTaskTimer(id);dv.append(tbB);}td.append(dv);} );if(isParent){const eb=document.createElement('button');eb.textContent='✏️ Edit';eb.onclick=()=>editTasks(day,name);td.append(eb);}tr.append(td);} );tb.append(tr);} );Object.entries(taskStatuses).forEach(([i,s])=>updateTaskUI(i,s));}
 
     // Init
-    document.addEventListener('DOMContentLoaded', () => {
-      if (isParent) document.getElementById('toggle-checkbox').checked = document.body.classList.contains('dark');
-      db.ref('weeklyChores').on('value', snap => { chores = snap.val() || {}; renderChores(); });
-      db.ref('tasks').on('value',        snap => { taskStatuses = snap.val() || {}; renderChores(); });
-      db.ref('timers').on('value',       snap => { timers = snap.val() || {}; updateTimers(); });
-      updateRecycling();
-      fetchWeather();
-    });
+    document.addEventListener('DOMContentLoaded',()=>{if(isParent)document.getElementById('toggle-checkbox').checked=document.body.classList.contains('dark');db.ref('weeklyChores').on('value',snap=>{chores=snap.val()||{};renderChores();});db.ref('tasks').on('value',snap=>{taskStatuses=snap.val()||{};renderChores();});db.ref('timers').on('value',snap=>{timers=snap.val()||{};updateTimers();});updateRecycling();fetchWeather();});
   </script>
 </body>
 </html>
+
