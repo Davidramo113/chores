@@ -90,6 +90,11 @@
       font-weight: bold;
       border-radius: 4px;
     }
+    .weather-icon {
+      margin-right: 0.5em;
+      font-size: 1.2em;
+      vertical-align: middle;
+    }
     .footer-note {
       margin-top: 30px;
       text-align: center;
@@ -167,7 +172,10 @@
   <div class="garbage-note">
     🗑️ <strong>Garbage Instructions:</strong> Must be out by 9:00 PM night before pickup. Wi-Fi may be disabled if missed.
   </div>
-  <div class="weather-alert">⛅ Loading today's forecast...</div>
+  <div class="weather-alert">
+    <span class="weather-icon">⛅</span>
+    Loading today's forecast...
+  </div>
 
   <div style="text-align:center; margin-top:15px;">
     <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true"
@@ -298,34 +306,50 @@
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
-    // — Today's Weather in °F —
+    // — Today's Weather in °F + Icon —
     const weatherConfig = {
       latitude: 40.8485,
       longitude: -73.149,
       timezone: "America/New_York"
     };
+    const weatherIcons = {
+      0: "☀️", 1: "🌤️", 2: "⛅", 3: "☁️",
+      45: "🌫️", 48: "🌫️",
+      51: "🌦️", 53: "🌦️", 55: "🌧️",
+      56: "🌧️", 57: "🌧️",
+      61: "🌧️", 63: "🌧️", 65: "🌧️",
+      66: "🌧️", 67: "🌧️",
+      71: "❄️", 73: "❄️", 75: "❄️", 77: "❄️",
+      80: "🌦️", 81: "🌦️", 82: "🌦️",
+      95: "⛈️", 96: "⛈️", 99: "⛈️"
+    };
     async function fetchWeatherToday(){
       try{
         const today = new Date().toISOString().split("T")[0];
         const url = new URL("https://api.open-meteo.com/v1/forecast");
-        url.searchParams.set("latitude",        weatherConfig.latitude);
-        url.searchParams.set("longitude",       weatherConfig.longitude);
-        url.searchParams.set("daily",           "temperature_2m_max,temperature_2m_min,precipitation_probability_max");
-        url.searchParams.set("temperature_unit","fahrenheit");
-        url.searchParams.set("timezone",        weatherConfig.timezone);
-        url.searchParams.set("start_date",      today);
-        url.searchParams.set("end_date",        today);
+        url.searchParams.set("latitude", weatherConfig.latitude);
+        url.searchParams.set("longitude", weatherConfig.longitude);
+        url.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode");
+        url.searchParams.set("temperature_unit", "fahrenheit");
+        url.searchParams.set("timezone", weatherConfig.timezone);
+        url.searchParams.set("start_date", today);
+        url.searchParams.set("end_date", today);
+
         const res = await fetch(url);
         const data = await res.json();
         const date = data.daily.time[0];
         const maxF = Math.round(data.daily.temperature_2m_max[0]);
         const minF = Math.round(data.daily.temperature_2m_min[0]);
         const pct  = data.daily.precipitation_probability_max[0];
+        const code = data.daily.weathercode[0];
+        const icon = weatherIcons[code] || "🌡️";
         const d    = new Date(date);
         const name = d.toLocaleDateString("en-US",{weekday:"long"});
         const c    = document.querySelector(".weather-alert");
         if(c){
-          c.innerHTML = `<strong>${name} (${date}):</strong> High ${maxF}°F, Low ${minF}°F, ${pct}% precip`;
+          c.innerHTML = `<span class="weather-icon">${icon}</span>` +
+                        `<strong>${name} (${date}):</strong> ` +
+                        `High ${maxF}°F, Low ${minF}°F, ${pct}% precip`;
         }
       } catch(e){
         console.error("Weather fetch failed:", e);
