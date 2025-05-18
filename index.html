@@ -7,7 +7,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
   <style>
-    /* Reset & theme variables */
     body, html { margin: 0; padding: 0; }
     :root {
       --bg-light: #f0f0f0; --bg-dark: #1e1e1e;
@@ -16,13 +15,7 @@
       --border:   #ccc;    --accent:     green;
       --highlight: #d1ffd1;
     }
-
-    /* Center and style the title */
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
+    h1 { text-align: center; margin-bottom: 20px; }
     body {
       font-family: Arial;
       padding: 20px;
@@ -34,17 +27,13 @@
       background: var(--bg-dark);
       color: var(--text-dark);
     }
-
-    /* Table styles */
     table {
       width: 100%;
       border-collapse: collapse;
       background: var(--table-light);
       border: 1px solid var(--border);
     }
-    table, th, td {
-      border: 1px solid var(--border);
-    }
+    table, th, td { border: 1px solid var(--border); }
     body.dark table {
       background: var(--table-dark);
       color: var(--text-dark);
@@ -58,8 +47,6 @@
       text-align: center;
     }
     th { background: #eee; }
-
-    /* Task item */
     .task {
       display: flex;
       justify-content: space-between;
@@ -74,13 +61,7 @@
       padding: 2px 6px;
       margin-top: 4px;
     }
-
-    /* Highlight today */
-    .highlight-row {
-      background-color: var(--highlight) !important;
-    }
-
-    /* Notes & alerts */
+    .highlight-row { background-color: var(--highlight) !important; }
     .recycling-note,
     .garbage-note,
     .weather-alert {
@@ -107,8 +88,6 @@
       text-align: center;
       font-style: italic;
     }
-
-    /* Theme switch */
     .theme-switch {
       position: absolute;
       top: 20px;
@@ -139,12 +118,8 @@
       top: 2px; left: 2px;
       transition: transform 0.3s;
     }
-    input:checked + .slider::before {
-      transform: translateX(25px);
-    }
-    input:checked + .slider {
-      background-color: #4caf50;
-    }
+    input:checked + .slider::before { transform: translateX(25px); }
+    input:checked + .slider { background-color: #4caf50; }
   </style>
 </head>
 <body>
@@ -170,11 +145,11 @@
 
   <div id="rotate-section" style="display: none; text-align: center; margin-top:20px;">
     <button onclick="rotateChores()" style="padding:10px 20px; font-size:16px;">🔁 Rotate Tasks</button>
+    <button onclick="reverseChores()" style="padding:10px 20px; font-size:16px; margin-left:10px;">🔄 Reverse Rotation</button>
   </div>
   <div id="reset-section" style="text-align:center; margin-top:20px;">
     <button onclick="resetAllTasks()" style="padding:10px 20px; font-size:16px;">Reset All Tasks</button>
   </div>
-
   <div class="recycling-note">♻️ <strong>Recycling:</strong> Loading next pickup info...</div>
   <div class="garbage-note">
     🗑️ <strong>Garbage Instructions:</strong> Must be out by 9:00 PM night before pickup. Wi-Fi may be disabled if missed.
@@ -197,7 +172,6 @@
   </div>
 
   <script>
-    // — Firebase Init —
     const firebaseConfig = {
       apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
       authDomain: "chores-c86f4.firebaseapp.com",
@@ -210,11 +184,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
-
-    // — State —
     let chores = {}, taskStatuses = {}, timers = {};
 
-    // — Theme Toggle —
     function toggleTheme() {
       document.body.classList.toggle("dark");
       const dark = document.body.classList.contains("dark");
@@ -222,22 +193,72 @@
       document.getElementById("toggle-checkbox").checked = dark;
     }
 
-    // — Timer Helpers —
+    function rotateChores() {
+      if (!isParent) return;
+      if (!confirm("Rotate all tasks among Jacob, Jalyna, and Josh?")) return;
+
+      const rotateKids = ["Jacob", "Jalyna", "Josh"];
+      const staticKids = ["Jeremy"];
+      const newChores = {};
+
+      for (let day in chores) {
+        newChores[day] = {};
+        for (let i = 0; i < rotateKids.length; i++) {
+          const current = rotateKids[i];
+          const next = rotateKids[(i + 1) % rotateKids.length];
+          newChores[day][next] = chores[day][current] || [];
+        }
+        staticKids.forEach(name => {
+          newChores[day][name] = chores[day][name] || [];
+        });
+      }
+
+      db.ref("weeklyChores").set(newChores)
+        .then(() => alert("Tasks rotated among Jacob, Jalyna, and Josh."))
+        .catch(err => alert("Rotation failed: " + err));
+    }
+
+    function reverseChores() {
+      if (!isParent) return;
+      if (!confirm("Reverse the last task rotation among Jacob, Jalyna, and Josh?")) return;
+
+      const rotateKids = ["Jacob", "Jalyna", "Josh"];
+      const staticKids = ["Jeremy"];
+      const newChores = {};
+
+      for (let day in chores) {
+        newChores[day] = {};
+        for (let i = 0; i < rotateKids.length; i++) {
+          const current = rotateKids[i];
+          const prev = rotateKids[(i - 1 + rotateKids.length) % rotateKids.length];
+          newChores[day][current] = chores[day][prev] || [];
+        }
+        staticKids.forEach(name => {
+          newChores[day][name] = chores[day][name] || [];
+        });
+      }
+
+      db.ref("weeklyChores").set(newChores)
+        .then(() => alert("Tasks reversed."))
+        .catch(err => alert("Reversal failed: " + err));
+    }
     function formatTimeLeft(ms) {
       const sec = Math.max(0, Math.floor(ms/1000));
       const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
       return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
     }
+
     function updateTimerDisplays() {
       const now = Date.now();
       for (let id in timers) {
         const span = document.getElementById(`${id}-timer`);
         if (!span) continue;
         const left = timers[id] - now;
-        span.textContent = left>0 ? `⏳ ${formatTimeLeft(left)}` : "";
+        span.textContent = left > 0 ? `⏳ ${formatTimeLeft(left)}` : "";
       }
     }
     setInterval(updateTimerDisplays, 1000);
+
     function setTaskTimer(id) {
       if (!isParent) return;
       const mins = parseInt(prompt("Set timer in minutes:"));
@@ -245,62 +266,123 @@
       else alert("Please enter a valid number.");
     }
 
-    // — Task Sync/UI —
-    function syncTask(id,status){ db.ref("tasks/"+id).set(status); }
-    function updateTaskUI(id,status){
-      const cb = document.getElementById(`${id}-checkbox`);
-      const st = document.getElementById(`${id}-status`);
-      const btn= document.getElementById(`${id}-approve`);
-      if(!cb || !st) return;
-      if(status==="approved"){
-        cb.checked=true; cb.disabled=true;
-        st.textContent="✅ Approved"; st.classList.add("approved");
-        if(btn) btn.style.display="none";
-      } else if(status==="pending"){
-        cb.checked=true; cb.disabled=false;
-        st.textContent="Pending";
-        if(btn && isParent) btn.style.display="inline-block";
-        else if(btn) btn.style.display="none";
-      } else {
-        cb.checked=false; cb.disabled=false;
-        st.textContent="";
-        if(btn) btn.style.display="none";
-      }
-    }
-    function toggleTask(cb,id){
-      const s = cb.checked ? "pending" : "";
-      syncTask(id,s);
-      updateTaskUI(id,s);
-    }
-    function approveTask(id){
-      if(!isParent) return;
-      syncTask(id,"approved");
-      updateTaskUI(id,"approved");
+    function syncTask(id, status) {
+      db.ref("tasks/"+id).set(status);
     }
 
-    // — Reset & Edit —
-    function resetAllTasks(){
-      if(!isParent) return;
-      if(confirm("Reset all tasks?")){
+    function updateTaskUI(id, status) {
+      const cb = document.getElementById(`${id}-checkbox`);
+      const st = document.getElementById(`${id}-status`);
+      const btn = document.getElementById(`${id}-approve`);
+      if (!cb || !st) return;
+      if (status === "approved") {
+        cb.checked = true; cb.disabled = true;
+        st.textContent = "✅ Approved"; st.classList.add("approved");
+        if (btn) btn.style.display = "none";
+      } else if (status === "pending") {
+        cb.checked = true; cb.disabled = false;
+        st.textContent = "Pending";
+        if (btn && isParent) btn.style.display = "inline-block";
+        else if (btn) btn.style.display = "none";
+      } else {
+        cb.checked = false; cb.disabled = false;
+        st.textContent = "";
+        if (btn) btn.style.display = "none";
+      }
+    }
+
+    function toggleTask(cb, id) {
+      const s = cb.checked ? "pending" : "";
+      syncTask(id, s);
+      updateTaskUI(id, s);
+    }
+
+    function approveTask(id) {
+      if (!isParent) return;
+      syncTask(id, "approved");
+      updateTaskUI(id, "approved");
+    }
+
+    function resetAllTasks() {
+      if (!isParent) return;
+      if (confirm("Reset all tasks?")) {
         db.ref("tasks").remove();
         location.reload();
       }
     }
-    function editTasks(day,name){
-      if(!isParent) return;
+
+    function editTasks(day, name) {
+      if (!isParent) return;
       const cur = (chores[day]?.[name]||[]).join(", ");
       const val = prompt(`Edit ${name} on ${day}:`, cur);
-      if(val !== null){
-        const arr = val.split(",").map(t=>t.trim()).filter(t=>t);
+      if (val !== null) {
+        const arr = val.split(",").map(t => t.trim()).filter(t => t);
         chores[day][name] = arr;
         db.ref(`weeklyChores/${day}/${name}`).set(arr);
       }
     }
 
-    // — Recycling Note —
-    function updateRecyclingNote(){
+    function renderChores() {
+      const tb = document.getElementById("chore-body");
+      const todayName = new Date().toLocaleDateString('en-US', {weekday:'long'});
+      const fullDate  = new Date().toLocaleDateString();
+      tb.innerHTML = "";
+      ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].forEach(day => {
+        const tr = document.createElement("tr");
+        if (day === todayName) tr.classList.add("highlight-row");
+        const tdDay = document.createElement("td");
+        tdDay.textContent = day === todayName ? `${day} (${fullDate})` : day;
+        tr.append(tdDay);
+
+        ["Jacob","Jalyna","Josh","Jeremy"].forEach(name => {
+          const td = document.createElement("td");
+          const list = chores[day]?.[name]||[];
+          if (!list.length) {
+            td.innerHTML = "<em>Free</em>";
+          } else {
+            list.forEach((task, i) => {
+              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
+              const dv = document.createElement("div");
+              dv.className = "task";
+              const lb = document.createElement("label");
+              const cb = document.createElement("input");
+              cb.type = "checkbox"; cb.id = `${id}-checkbox`;
+              cb.onchange = () => toggleTask(cb, id);
+              lb.append(cb, document.createTextNode(task));
+              const ts = document.createElement("span");
+              ts.id = `${id}-timer`; ts.className = "timer";
+              const ss = document.createElement("span");
+              ss.id = `${id}-status`;
+              dv.append(lb, ts, ss);
+              if (isParent) {
+                const ap = document.createElement("button");
+                ap.id = `${id}-approve`; ap.textContent = "Approve"; ap.style.display = "none";
+                ap.onclick = () => approveTask(id);
+                dv.append(ap);
+                const tbBtn = document.createElement("button");
+                tbBtn.textContent = "⏱️ Set Timer"; tbBtn.className = "set-timer-btn";
+                tbBtn.onclick = () => setTaskTimer(id);
+                dv.append(tbBtn);
+              }
+              td.append(dv);
+            });
+          }
+          if (isParent) {
+            const eb = document.createElement("button");
+            eb.textContent = "✏️ Edit"; eb.style.marginTop = "5px"; eb.style.fontSize = "12px";
+            eb.onclick = () => editTasks(day, name);
+            td.append(eb);
+          }
+          tr.append(td);
+        });
+        tb.append(tr);
+      });
+      Object.entries(taskStatuses).forEach(([id, st]) => updateTaskUI(id, st));
+    }
+
+    function updateRecyclingNote() {
       const note = document.querySelector(".recycling-note");
-      if(!note) return;
+      if (!note) return;
       const now = new Date(), wed = new Date(now);
       wed.setDate(wed.getDate() + ((3 - now.getDay() + 7) % 7));
       wed.setHours(6,0,0,0);
@@ -313,7 +395,6 @@
       note.innerHTML = `♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
-    // — Today's Weather in °F + Icon with local date parse —
     const weatherConfig = {
       latitude: 40.8485,
       longitude: -73.149,
@@ -330,7 +411,7 @@
       80: "🌦️", 81: "🌦️", 82: "🌦️",
       95: "⛈️", 96: "⛈️", 99: "⛈️"
     };
-    async function fetchWeatherToday(){
+    async function fetchWeatherToday() {
       try {
         const now = new Date();
         const yyyy = now.getFullYear();
@@ -355,7 +436,6 @@
         const pct  = data.daily.precipitation_probability_max[0];
         const code = data.daily.weathercode[0];
         const icon = weatherIcons[code] || "🌡️";
-        // parse as local date
         const [y, mo, day] = date.split("-").map(Number);
         const dLocal = new Date(y, mo-1, day);
         const name = dLocal.toLocaleDateString("en-US",{weekday:"long"});
@@ -370,71 +450,11 @@
       }
     }
 
-    // — Render chores table —
-    function renderChores(){
-      const tb = document.getElementById("chore-body");
-      const todayName = new Date().toLocaleDateString('en-US',{weekday:'long'});
-      const fullDate  = new Date().toLocaleDateString();
-      tb.innerHTML = "";
-      ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].forEach(day=>{
-        const tr = document.createElement("tr");
-        if(day === todayName) tr.classList.add("highlight-row");
-        const tdDay = document.createElement("td");
-        tdDay.textContent = day === todayName ? `${day} (${fullDate})` : day;
-        tr.append(tdDay);
-
-        ["Jacob","Jalyna","Josh","Jeremy"].forEach(name=>{
-          const td = document.createElement("td");
-          const list = chores[day]?.[name]||[];
-          if(!list.length){
-            td.innerHTML="<em>Free</em>";
-          } else {
-            list.forEach((task,i)=>{
-              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
-              const dv = document.createElement("div");
-              dv.className="task";
-              const lb = document.createElement("label");
-              const cb = document.createElement("input");
-              cb.type="checkbox"; cb.id=`${id}-checkbox`;
-              cb.onchange=()=>toggleTask(cb,id);
-              lb.append(cb, document.createTextNode(task));
-              const ts = document.createElement("span");
-              ts.id=`${id}-timer`; ts.className="timer";
-              const ss = document.createElement("span");
-              ss.id=`${id}-status`;
-              dv.append(lb, ts, ss);
-              if(isParent){
-                const ap = document.createElement("button");
-                ap.id=`${id}-approve`; ap.textContent="Approve"; ap.style.display="none";
-                ap.onclick=()=>approveTask(id);
-                dv.append(ap);
-                const tbBtn = document.createElement("button");
-                tbBtn.textContent="⏱️ Set Timer"; tbBtn.className="set-timer-btn";
-                tbBtn.onclick=()=>setTaskTimer(id);
-                dv.append(tbBtn);
-              }
-              td.append(dv);
-            });
-          }
-          if(isParent){
-            const eb = document.createElement("button");
-            eb.textContent="✏️ Edit"; eb.style.marginTop="5px"; eb.style.fontSize="12px";
-            eb.onclick=()=>editTasks(day,name);
-            td.append(eb);
-          }
-          tr.append(td);
-        });
-        tb.append(tr);
-      });
-      Object.entries(taskStatuses).forEach(([id,st])=>updateTaskUI(id,st));
-    }
-
-    // — Init —
-    document.addEventListener("DOMContentLoaded",()=>{
-      if(isParent) document.getElementById("rotate-section").style.display="block";
-      db.ref("weeklyChores").on("value", snap=>{ chores = snap.val()||{}; renderChores(); });
-      db.ref("tasks").on("value",      snap=>{ taskStatuses = snap.val()||{}; renderChores(); });
-      db.ref("timers").on("value",     snap=>{ timers = snap.val()||{}; updateTimerDisplays(); });
+    document.addEventListener("DOMContentLoaded", () => {
+      if (isParent) document.getElementById("rotate-section").style.display = "block";
+      db.ref("weeklyChores").on("value", snap => { chores = snap.val()||{}; renderChores(); });
+      db.ref("tasks").on("value", snap => { taskStatuses = snap.val()||{}; renderChores(); });
+      db.ref("timers").on("value", snap => { timers = snap.val()||{}; updateTimerDisplays(); });
       updateRecyclingNote();
       fetchWeatherToday();
     });
