@@ -129,7 +129,6 @@
     <span class="slider"></span>
     <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
   </label>
-
   <table>
     <thead>
       <tr>
@@ -185,7 +184,6 @@
     const db = firebase.database();
     const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
     let chores = {}, taskStatuses = {}, timers = {};
-
     function toggleTheme() {
       document.body.classList.toggle("dark");
       const dark = document.body.classList.contains("dark");
@@ -193,55 +191,130 @@
       document.getElementById("toggle-checkbox").checked = dark;
     }
 
-    function rotateChores() {
+    function rotateDayTasks(day) {
       if (!isParent) return;
-      if (!confirm("Rotate all tasks among Jacob, Jalyna, and Josh?")) return;
+      if (!chores[day]) return alert("No tasks found for " + day);
+      if (!confirm(`Rotate Jacob, Jalyna, and Josh for ${day}?`)) return;
 
       const rotateKids = ["Jacob", "Jalyna", "Josh"];
       const staticKids = ["Jeremy"];
-      const newChores = {};
+      const newDayTasks = {};
 
-      for (let day in chores) {
-        newChores[day] = {};
-        for (let i = 0; i < rotateKids.length; i++) {
-          const current = rotateKids[i];
-          const next = rotateKids[(i + 1) % rotateKids.length];
-          newChores[day][next] = chores[day][current] || [];
-        }
-        staticKids.forEach(name => {
-          newChores[day][name] = chores[day][name] || [];
-        });
+      for (let i = 0; i < rotateKids.length; i++) {
+        const current = rotateKids[i];
+        const next = rotateKids[(i + 1) % rotateKids.length];
+        newDayTasks[next] = chores[day][current] || [];
       }
 
-      db.ref("weeklyChores").set(newChores)
-        .then(() => alert("Tasks rotated among Jacob, Jalyna, and Josh."))
+      staticKids.forEach(name => {
+        newDayTasks[name] = chores[day][name] || [];
+      });
+
+      db.ref(`weeklyChores/${day}`).set(newDayTasks)
+        .then(() => alert(`${day}'s tasks rotated successfully.`))
         .catch(err => alert("Rotation failed: " + err));
     }
 
-    function reverseChores() {
+    function reverseDayTasks(day) {
       if (!isParent) return;
-      if (!confirm("Reverse the last task rotation among Jacob, Jalyna, and Josh?")) return;
+      if (!chores[day]) return alert("No tasks found for " + day);
+      if (!confirm(`Reverse rotation for Jacob, Jalyna, and Josh on ${day}?`)) return;
 
       const rotateKids = ["Jacob", "Jalyna", "Josh"];
       const staticKids = ["Jeremy"];
-      const newChores = {};
+      const newDayTasks = {};
 
-      for (let day in chores) {
-        newChores[day] = {};
-        for (let i = 0; i < rotateKids.length; i++) {
-          const current = rotateKids[i];
-          const prev = rotateKids[(i - 1 + rotateKids.length) % rotateKids.length];
-          newChores[day][current] = chores[day][prev] || [];
-        }
-        staticKids.forEach(name => {
-          newChores[day][name] = chores[day][name] || [];
-        });
+      for (let i = 0; i < rotateKids.length; i++) {
+        const current = rotateKids[i];
+        const prev = rotateKids[(i - 1 + rotateKids.length) % rotateKids.length];
+        newDayTasks[current] = chores[day][prev] || [];
       }
 
-      db.ref("weeklyChores").set(newChores)
-        .then(() => alert("Tasks reversed."))
+      staticKids.forEach(name => {
+        newDayTasks[name] = chores[day][name] || [];
+      });
+
+      db.ref(`weeklyChores/${day}`).set(newDayTasks)
+        .then(() => alert(`${day}'s rotation reversed successfully.`))
         .catch(err => alert("Reversal failed: " + err));
     }
+
+    function renderChores() {
+      const tb = document.getElementById("chore-body");
+      const todayName = new Date().toLocaleDateString('en-US', {weekday:'long'});
+      const fullDate  = new Date().toLocaleDateString();
+      tb.innerHTML = "";
+      ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].forEach(day => {
+        if (isParent) {
+          const rotateRow = document.createElement("tr");
+          const rotateCell = document.createElement("td");
+          rotateCell.colSpan = 5;
+          rotateCell.style.textAlign = "center";
+          const rotateBtn = document.createElement("button");
+          rotateBtn.textContent = "🔁 Rotate " + day;
+          rotateBtn.style.cssText = "font-size:12px; margin: 5px;";
+          rotateBtn.onclick = () => rotateDayTasks(day);
+          const reverseBtn = document.createElement("button");
+          reverseBtn.textContent = "🔄 Reverse " + day;
+          reverseBtn.style.cssText = "font-size:12px; margin: 5px;";
+          reverseBtn.onclick = () => reverseDayTasks(day);
+          rotateCell.appendChild(rotateBtn);
+          rotateCell.appendChild(reverseBtn);
+          rotateRow.appendChild(rotateCell);
+          tb.appendChild(rotateRow);
+        }
+        const tr = document.createElement("tr");
+        if (day === todayName) tr.classList.add("highlight-row");
+        const tdDay = document.createElement("td");
+        tdDay.textContent = day === todayName ? `${day} (${fullDate})` : day;
+        tr.append(tdDay);
+
+        ["Jacob","Jalyna","Josh","Jeremy"].forEach(name => {
+          const td = document.createElement("td");
+          const list = chores[day]?.[name]||[];
+          if (!list.length) {
+            td.innerHTML = "<em>Free</em>";
+          } else {
+            list.forEach((task, i) => {
+              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
+              const dv = document.createElement("div");
+              dv.className = "task";
+              const lb = document.createElement("label");
+              const cb = document.createElement("input");
+              cb.type = "checkbox"; cb.id = `${id}-checkbox`;
+              cb.onchange = () => toggleTask(cb, id);
+              lb.append(cb, document.createTextNode(task));
+              const ts = document.createElement("span");
+              ts.id = `${id}-timer`; ts.className = "timer";
+              const ss = document.createElement("span");
+              ss.id = `${id}-status`;
+              dv.append(lb, ts, ss);
+              if (isParent) {
+                const ap = document.createElement("button");
+                ap.id = `${id}-approve`; ap.textContent = "Approve"; ap.style.display = "none";
+                ap.onclick = () => approveTask(id);
+                dv.append(ap);
+                const tbBtn = document.createElement("button");
+                tbBtn.textContent = "⏱️ Set Timer"; tbBtn.className = "set-timer-btn";
+                tbBtn.onclick = () => setTaskTimer(id);
+                dv.append(tbBtn);
+              }
+              td.append(dv);
+            });
+          }
+          if (isParent) {
+            const eb = document.createElement("button");
+            eb.textContent = "✏️ Edit"; eb.style.marginTop = "5px"; eb.style.fontSize = "12px";
+            eb.onclick = () => editTasks(day, name);
+            td.append(eb);
+          }
+          tr.append(td);
+        });
+        tb.append(tr);
+      });
+      Object.entries(taskStatuses).forEach(([id, st]) => updateTaskUI(id, st));
+    }
+
     function formatTimeLeft(ms) {
       const sec = Math.max(0, Math.floor(ms/1000));
       const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
@@ -321,65 +394,6 @@
         db.ref(`weeklyChores/${day}/${name}`).set(arr);
       }
     }
-
-    function renderChores() {
-      const tb = document.getElementById("chore-body");
-      const todayName = new Date().toLocaleDateString('en-US', {weekday:'long'});
-      const fullDate  = new Date().toLocaleDateString();
-      tb.innerHTML = "";
-      ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].forEach(day => {
-        const tr = document.createElement("tr");
-        if (day === todayName) tr.classList.add("highlight-row");
-        const tdDay = document.createElement("td");
-        tdDay.textContent = day === todayName ? `${day} (${fullDate})` : day;
-        tr.append(tdDay);
-
-        ["Jacob","Jalyna","Josh","Jeremy"].forEach(name => {
-          const td = document.createElement("td");
-          const list = chores[day]?.[name]||[];
-          if (!list.length) {
-            td.innerHTML = "<em>Free</em>";
-          } else {
-            list.forEach((task, i) => {
-              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
-              const dv = document.createElement("div");
-              dv.className = "task";
-              const lb = document.createElement("label");
-              const cb = document.createElement("input");
-              cb.type = "checkbox"; cb.id = `${id}-checkbox`;
-              cb.onchange = () => toggleTask(cb, id);
-              lb.append(cb, document.createTextNode(task));
-              const ts = document.createElement("span");
-              ts.id = `${id}-timer`; ts.className = "timer";
-              const ss = document.createElement("span");
-              ss.id = `${id}-status`;
-              dv.append(lb, ts, ss);
-              if (isParent) {
-                const ap = document.createElement("button");
-                ap.id = `${id}-approve`; ap.textContent = "Approve"; ap.style.display = "none";
-                ap.onclick = () => approveTask(id);
-                dv.append(ap);
-                const tbBtn = document.createElement("button");
-                tbBtn.textContent = "⏱️ Set Timer"; tbBtn.className = "set-timer-btn";
-                tbBtn.onclick = () => setTaskTimer(id);
-                dv.append(tbBtn);
-              }
-              td.append(dv);
-            });
-          }
-          if (isParent) {
-            const eb = document.createElement("button");
-            eb.textContent = "✏️ Edit"; eb.style.marginTop = "5px"; eb.style.fontSize = "12px";
-            eb.onclick = () => editTasks(day, name);
-            td.append(eb);
-          }
-          tr.append(td);
-        });
-        tb.append(tr);
-      });
-      Object.entries(taskStatuses).forEach(([id, st]) => updateTaskUI(id, st));
-    }
-
     function updateRecyclingNote() {
       const note = document.querySelector(".recycling-note");
       if (!note) return;
