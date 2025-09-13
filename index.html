@@ -184,7 +184,6 @@
     const db = firebase.database();
     const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
     let chores = {}, taskStatuses = {}, timers = {};
-
     function toggleTheme() {
       document.body.classList.toggle("dark");
       const dark = document.body.classList.contains("dark");
@@ -240,34 +239,6 @@
         .catch(err => alert("Reversal failed: " + err));
     }
 
-    /* -------------------------
-       SUNDAY EDITOR (parent only)
-       ------------------------- */
-    function attachSundayEditor(td, day, name, list) {
-      if (!isParent) return;
-
-      const label = document.createElement("div");
-      label.style.cssText = "font-size:11px;opacity:.75;margin-bottom:4px;";
-      label.textContent = "Edit Sunday tasks (parent only)";
-
-      const editor = document.createElement("input");
-      editor.type = "text";
-      editor.style.cssText = "width:100%;font-size:12px;margin-bottom:6px;";
-      editor.placeholder = "Comma-separated tasks";
-      editor.value = (list || []).join(", ");
-
-      const save = () => {
-        const val = editor.value.trim();
-        const arr = val ? val.split(",").map(t => t.trim()).filter(Boolean) : [];
-        db.ref(`weeklyChores/${day}/${name}`).set(arr);
-      };
-
-      editor.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
-      editor.addEventListener("blur", save);
-
-      td.append(label, editor);
-    }
-
     function renderChores() {
       const tb = document.getElementById("chore-body");
       const todayName = new Date().toLocaleDateString('en-US', {weekday:'long'});
@@ -301,14 +272,8 @@
         ["Jacob","Jalyna","Josh","Jeremy"].forEach(name => {
           const td = document.createElement("td");
           const list = chores[day]?.[name]||[];
-
-          // Make Sunday editable for parent (adds a small input above the normal tasks)
-          if (day === "Sunday" && isParent) {
-            attachSundayEditor(td, day, name, list);
-          }
-
           if (!list.length) {
-            td.innerHTML += "<em>Free</em>";
+            td.innerHTML = "<em>Free</em>";
           } else {
             list.forEach((task, i) => {
               const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
@@ -429,7 +394,6 @@
         db.ref(`weeklyChores/${day}/${name}`).set(arr);
       }
     }
-
     function updateRecyclingNote() {
       const note = document.querySelector(".recycling-note");
       if (!note) return;
