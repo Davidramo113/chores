@@ -195,7 +195,7 @@
     function rotateDayTasks(day) {
       if (!isParent) return;
       if (!chores[day]) return alert("No tasks found for " + day);
-      if (!confirm(Rotate Jacob, Jalyna, and Josh for ${day}?)) return;
+      if (!confirm(`Rotate Jacob, Jalyna, and Josh for ${day}?`)) return;
 
       const rotateKids = ["Jacob", "Jalyna", "Josh"];
       const staticKids = ["Jeremy"];
@@ -211,15 +211,15 @@
         newDayTasks[name] = chores[day][name] || [];
       });
 
-      db.ref(weeklyChores/${day}).set(newDayTasks)
-        .then(() => alert(${day}'s tasks rotated successfully.))
+      db.ref(`weeklyChores/${day}`).set(newDayTasks)
+        .then(() => alert(`${day}'s tasks rotated successfully.`))
         .catch(err => alert("Rotation failed: " + err));
     }
 
     function reverseDayTasks(day) {
       if (!isParent) return;
       if (!chores[day]) return alert("No tasks found for " + day);
-      if (!confirm(Reverse rotation for Jacob, Jalyna, and Josh on ${day}?)) return;
+      if (!confirm(`Reverse rotation for Jacob, Jalyna, and Josh on ${day}?`)) return;
 
       const rotateKids = ["Jacob", "Jalyna", "Josh"];
       const staticKids = ["Jeremy"];
@@ -235,8 +235,8 @@
         newDayTasks[name] = chores[day][name] || [];
       });
 
-      db.ref(weeklyChores/${day}).set(newDayTasks)
-        .then(() => alert(${day}'s rotation reversed successfully.))
+      db.ref(`weeklyChores/${day}`).set(newDayTasks)
+        .then(() => alert(`${day}'s rotation reversed successfully.`))
         .catch(err => alert("Reversal failed: " + err));
     }
 
@@ -267,7 +267,7 @@
         const tr = document.createElement("tr");
         if (day === todayName) tr.classList.add("highlight-row");
         const tdDay = document.createElement("td");
-        tdDay.textContent = day === todayName ? ${day} (${fullDate}) : day;
+        tdDay.textContent = day === todayName ? `${day} (${fullDate})` : day;
         tr.append(tdDay);
 
         ["Jacob","Jalyna","Josh","Jeremy"].forEach(name => {
@@ -277,22 +277,22 @@
             td.innerHTML = "<em>Free</em>";
           } else {
             list.forEach((task, i) => {
-              const id = ${name.toLowerCase()}-${day.toLowerCase()}-${i};
+              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
               const dv = document.createElement("div");
               dv.className = "task";
               const lb = document.createElement("label");
               const cb = document.createElement("input");
-              cb.type = "checkbox"; cb.id = ${id}-checkbox;
+              cb.type = "checkbox"; cb.id = `${id}-checkbox`;
               cb.onchange = () => toggleTask(cb, id);
               lb.append(cb, document.createTextNode(task));
               const ts = document.createElement("span");
-              ts.id = ${id}-timer; ts.className = "timer";
+              ts.id = `${id}-timer`; ts.className = "timer";
               const ss = document.createElement("span");
-              ss.id = ${id}-status;
+              ss.id = `${id}-status`;
               dv.append(lb, ts, ss);
               if (isParent) {
                 const ap = document.createElement("button");
-                ap.id = ${id}-approve; ap.textContent = "Approve"; ap.style.display = "none";
+                ap.id = `${id}-approve`; ap.textContent = "Approve"; ap.style.display = "none";
                 ap.onclick = () => approveTask(id);
                 dv.append(ap);
                 const tbBtn = document.createElement("button");
@@ -319,16 +319,16 @@
     function formatTimeLeft(ms) {
       const sec = Math.max(0, Math.floor(ms/1000));
       const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-      return ${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")};
+      return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
     }
 
     function updateTimerDisplays() {
       const now = Date.now();
       for (let id in timers) {
-        const span = document.getElementById(${id}-timer);
+        const span = document.getElementById(`${id}-timer`);
         if (!span) continue;
         const left = timers[id] - now;
-        span.textContent = left > 0 ? ⏳ ${formatTimeLeft(left)} : "";
+        span.textContent = left > 0 ? `⏳ ${formatTimeLeft(left)}` : "";
       }
     }
     setInterval(updateTimerDisplays, 1000);
@@ -345,9 +345,9 @@
     }
 
     function updateTaskUI(id, status) {
-      const cb = document.getElementById(${id}-checkbox);
-      const st = document.getElementById(${id}-status);
-      const btn = document.getElementById(${id}-approve);
+      const cb = document.getElementById(`${id}-checkbox`);
+      const st = document.getElementById(`${id}-status`);
+      const btn = document.getElementById(`${id}-approve`);
       if (!cb || !st) return;
       if (status === "approved") {
         cb.checked = true; cb.disabled = true;
@@ -388,7 +388,7 @@
     function editTasks(day, name) {
       if (!isParent) return;
       const cur = (chores[day]?.[name]||[]).join(", ");
-      const val = prompt(Edit ${name} on ${day}:, cur);
+      const val = prompt(`Edit ${name} on ${day}:`, cur);
       if (val !== null) {
         const arr = val.split(",").map(t => t.trim()).filter(t => t);
 
@@ -397,7 +397,7 @@
         chores[day][name] = arr;
 
         // Write to Firebase (listener will re-render)
-        db.ref(weeklyChores/${day}/${name}).set(arr);
+        db.ref(`weeklyChores/${day}/${name}`).set(arr);
       }
     }
 
@@ -413,7 +413,7 @@
       const weeks = Math.round((pd - start) / (7*86400000));
       const type = types[weeks % 2];
       const d = pd.toLocaleDateString('en-US',{month:'long',day:'numeric'});
-      note.innerHTML = ♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.;
+      note.innerHTML = `♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.`;
     }
 
     const weatherConfig = {
@@ -438,7 +438,7 @@
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth()+1).padStart(2,'0');
         const dd = String(now.getDate()).padStart(2,'0');
-        const todayStr = ${yyyy}-${mm}-${dd};
+        const todayStr = `${yyyy}-${mm}-${dd}`;
 
         const url = new URL("https://api.open-meteo.com/v1/forecast");
         url.searchParams.set("latitude", weatherConfig.latitude);
@@ -462,9 +462,9 @@
         const name = dLocal.toLocaleDateString("en-US",{weekday:"long"});
         const c    = document.querySelector(".weather-alert");
         if (c) {
-          c.innerHTML = <span class="weather-icon">${icon}</span> +
-                        <strong>${name} (${date}):</strong>  +
-                        High ${maxF}°F, Low ${minF}°F, ${pct}% precip;
+          c.innerHTML = `<span class="weather-icon">${icon}</span>` +
+                        `<strong>${name} (${date}):</strong> ` +
+                        `High ${maxF}°F, Low ${minF}°F, ${pct}% precip`;
         }
       } catch(e) {
         console.error("Weather fetch failed:", e);
@@ -481,4 +481,4 @@
     });
   </script>
 </body>
-</html>    
+</html>
