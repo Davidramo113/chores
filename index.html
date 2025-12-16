@@ -195,7 +195,7 @@
     function rotateDayTasks(day) {
       if (!isParent) return;
       if (!chores[day]) return alert("No tasks found for " + day);
-      if (!confirm(`Rotate Jacob, Jalyna, and Josh for ${day}?`)) return;
+      if (!confirm(Rotate Jacob, Jalyna, and Josh for ${day}?)) return;
 
       const rotateKids = ["Jacob", "Jalyna", "Josh"];
       const staticKids = ["Jeremy"];
@@ -211,15 +211,15 @@
         newDayTasks[name] = chores[day][name] || [];
       });
 
-      db.ref(`weeklyChores/${day}`).set(newDayTasks)
-        .then(() => alert(`${day}'s tasks rotated successfully.`))
+      db.ref(weeklyChores/${day}).set(newDayTasks)
+        .then(() => alert(${day}'s tasks rotated successfully.))
         .catch(err => alert("Rotation failed: " + err));
     }
 
     function reverseDayTasks(day) {
       if (!isParent) return;
       if (!chores[day]) return alert("No tasks found for " + day);
-      if (!confirm(`Reverse rotation for Jacob, Jalyna, and Josh on ${day}?`)) return;
+      if (!confirm(Reverse rotation for Jacob, Jalyna, and Josh on ${day}?)) return;
 
       const rotateKids = ["Jacob", "Jalyna", "Josh"];
       const staticKids = ["Jeremy"];
@@ -235,8 +235,8 @@
         newDayTasks[name] = chores[day][name] || [];
       });
 
-      db.ref(`weeklyChores/${day}`).set(newDayTasks)
-        .then(() => alert(`${day}'s rotation reversed successfully.`))
+      db.ref(weeklyChores/${day}).set(newDayTasks)
+        .then(() => alert(${day}'s rotation reversed successfully.))
         .catch(err => alert("Reversal failed: " + err));
     }
 
@@ -267,7 +267,7 @@
         const tr = document.createElement("tr");
         if (day === todayName) tr.classList.add("highlight-row");
         const tdDay = document.createElement("td");
-        tdDay.textContent = day === todayName ? `${day} (${fullDate})` : day;
+        tdDay.textContent = day === todayName ? ${day} (${fullDate}) : day;
         tr.append(tdDay);
 
         ["Jacob","Jalyna","Josh","Jeremy"].forEach(name => {
@@ -277,22 +277,22 @@
             td.innerHTML = "<em>Free</em>";
           } else {
             list.forEach((task, i) => {
-              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
+              const id = ${name.toLowerCase()}-${day.toLowerCase()}-${i};
               const dv = document.createElement("div");
               dv.className = "task";
               const lb = document.createElement("label");
               const cb = document.createElement("input");
-              cb.type = "checkbox"; cb.id = `${id}-checkbox`;
+              cb.type = "checkbox"; cb.id = ${id}-checkbox;
               cb.onchange = () => toggleTask(cb, id);
               lb.append(cb, document.createTextNode(task));
               const ts = document.createElement("span");
-              ts.id = `${id}-timer`; ts.className = "timer";
+              ts.id = ${id}-timer; ts.className = "timer";
               const ss = document.createElement("span");
-              ss.id = `${id}-status`;
+              ss.id = ${id}-status;
               dv.append(lb, ts, ss);
               if (isParent) {
                 const ap = document.createElement("button");
-                ap.id = `${id}-approve`; ap.textContent = "Approve"; ap.style.display = "none";
+                ap.id = ${id}-approve; ap.textContent = "Approve"; ap.style.display = "none";
                 ap.onclick = () => approveTask(id);
                 dv.append(ap);
                 const tbBtn = document.createElement("button");
@@ -319,16 +319,16 @@
     function formatTimeLeft(ms) {
       const sec = Math.max(0, Math.floor(ms/1000));
       const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-      return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+      return ${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")};
     }
 
     function updateTimerDisplays() {
       const now = Date.now();
       for (let id in timers) {
-        const span = document.getElementById(`${id}-timer`);
+        const span = document.getElementById(${id}-timer);
         if (!span) continue;
         const left = timers[id] - now;
-        span.textContent = left > 0 ? `⏳ ${formatTimeLeft(left)}` : "";
+        span.textContent = left > 0 ? ⏳ ${formatTimeLeft(left)} : "";
       }
     }
     setInterval(updateTimerDisplays, 1000);
@@ -345,9 +345,9 @@
     }
 
     function updateTaskUI(id, status) {
-      const cb = document.getElementById(`${id}-checkbox`);
-      const st = document.getElementById(`${id}-status`);
-      const btn = document.getElementById(`${id}-approve`);
+      const cb = document.getElementById(${id}-checkbox);
+      const st = document.getElementById(${id}-status);
+      const btn = document.getElementById(${id}-approve);
       if (!cb || !st) return;
       if (status === "approved") {
         cb.checked = true; cb.disabled = true;
@@ -388,7 +388,7 @@
     function editTasks(day, name) {
       if (!isParent) return;
       const cur = (chores[day]?.[name]||[]).join(", ");
-      const val = prompt(`Edit ${name} on ${day}:`, cur);
+      const val = prompt(Edit ${name} on ${day}:, cur);
       if (val !== null) {
         const arr = val.split(",").map(t => t.trim()).filter(t => t);
 
@@ -397,7 +397,7 @@
         chores[day][name] = arr;
 
         // Write to Firebase (listener will re-render)
-        db.ref(`weeklyChores/${day}/${name}`).set(arr);
+        db.ref(weeklyChores/${day}/${name}).set(arr);
       }
     }
 
@@ -413,7 +413,7 @@
       const weeks = Math.round((pd - start) / (7*86400000));
       const type = types[weeks % 2];
       const d = pd.toLocaleDateString('en-US',{month:'long',day:'numeric'});
-      note.innerHTML = `♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.`;
+      note.innerHTML = ♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.;
     }
 
     const weatherConfig = {
@@ -438,7 +438,7 @@
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth()+1).padStart(2,'0');
         const dd = String(now.getDate()).padStart(2,'0');
-        const todayStr = `${yyyy}-${mm}-${dd}`;
+        const todayStr = ${yyyy}-${mm}-${dd};
 
         const url = new URL("https://api.open-meteo.com/v1/forecast");
         url.searchParams.set("latitude", weatherConfig.latitude);
@@ -462,9 +462,9 @@
         const name = dLocal.toLocaleDateString("en-US",{weekday:"long"});
         const c    = document.querySelector(".weather-alert");
         if (c) {
-          c.innerHTML = `<span class="weather-icon">${icon}</span>` +
-                        `<strong>${name} (${date}):</strong> ` +
-                        `High ${maxF}°F, Low ${minF}°F, ${pct}% precip`;
+          c.innerHTML = <span class="weather-icon">${icon}</span> +
+                        <strong>${name} (${date}):</strong>  +
+                        High ${maxF}°F, Low ${minF}°F, ${pct}% precip;
         }
       } catch(e) {
         console.error("Weather fetch failed:", e);
@@ -481,610 +481,4 @@
     });
   </script>
 </body>
-</html>
-    .theme-switch {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: bold;
-      color: var(--text-light);
-      user-select: none;
-    }
-    body.dark .theme-switch { color: var(--text-dark); }
-    .theme-switch input { display: none; }
-    .slider {
-      position: relative;
-      width: 50px; height: 25px;
-      background-color: #ccc;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .slider::before {
-      content: "";
-      position: absolute;
-      width: 21px; height: 21px;
-      border-radius: 50%;
-      background-color: white;
-      top: 2px; left: 2px;
-      transition: transform 0.3s;
-    }
-    input:checked + .slider::before { transform: translateX(25px); }
-    input:checked + .slider { background-color: #4caf50; }
-
-    /* Table */
-    .table-wrap { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--table-light);
-      border: 1px solid var(--border);
-      min-width: 760px; /* helps on phones: scroll instead of crushing columns */
-    }
-    table, th, td { border: 1px solid var(--border); }
-
-    body.dark table {
-      background: var(--table-dark);
-      color: var(--text-dark);
-    }
-    body.dark th, body.dark td {
-      background-color: #333;
-      border-color: #555;
-    }
-
-    th, td { padding: 10px; vertical-align: top; }
-    th {
-      background: #eee;
-      position: sticky;
-      top: 0;
-      z-index: 3;
-      text-align: center;
-    }
-    body.dark th { background: #2f2f2f; }
-
-    .highlight-row { background-color: var(--highlight) !important; }
-    body.dark .highlight-row { background-color: #234023 !important; }
-
-    /* Day cell */
-    .day-cell {
-      font-weight: bold;
-      text-align: left;
-      white-space: nowrap;
-      min-width: 145px;
-    }
-
-    /* Task rows inside cells */
-    .taskline {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 6px 6px;
-      border-radius: 6px;
-      margin-bottom: 6px;
-      background: rgba(0,0,0,0.03);
-    }
-    body.dark .taskline { background: rgba(255,255,255,0.06); }
-
-    .taskline input[type="checkbox"] {
-      transform: scale(1.15);
-      margin-top: 2px;
-      cursor: pointer;
-    }
-
-    .tasktext {
-      flex: 1;
-      line-height: 1.25;
-      word-break: break-word;
-    }
-
-    .status {
-      font-size: 12px;
-      margin-left: 6px;
-      white-space: nowrap;
-    }
-    .approved { color: var(--accent); font-weight: bold; }
-
-    .timer {
-      font-size: 12px;
-      color: #c00;
-      margin-left: 6px;
-      white-space: nowrap;
-    }
-
-    .cell-footer {
-      margin-top: 8px;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: white;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-    }
-    body.dark button {
-      background: #1f1f1f;
-      color: var(--text-dark);
-      border-color: #555;
-    }
-
-    .set-timer-btn { padding: 4px 8px; font-size: 11px; }
-    .approve-btn { padding: 4px 8px; font-size: 11px; }
-    .edit-btn { padding: 6px 10px; font-size: 12px; }
-
-    .muted { color: var(--muted); font-style: italic; }
-
-    /* Notes */
-    .recycling-note,
-    .garbage-note,
-    .weather-alert {
-      margin-top: 18px;
-      font-size: 14px;
-      text-align: center;
-      line-height: 1.6;
-    }
-
-    .weather-alert {
-      margin-top: 10px;
-      padding: 0.5em 1em;
-      background: #fffae6;
-      border-left: 4px solid #f5c518;
-      font-weight: bold;
-      border-radius: 6px;
-      display: inline-block;
-    }
-    body.dark .weather-alert {
-      background: #3a341f;
-      border-left-color: #f5c518;
-    }
-
-    .weather-icon {
-      margin-right: 0.5em;
-      font-size: 1.2em;
-      vertical-align: middle;
-    }
-
-    .footer-note {
-      margin-top: 26px;
-      text-align: center;
-      font-style: italic;
-    }
-
-    .controls {
-      text-align: center;
-      margin-top: 16px;
-    }
-    .controls button {
-      font-size: 15px;
-      padding: 10px 16px;
-      border-radius: 10px;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>Family Tasks</h1>
-
-  <label class="theme-switch" for="toggle-checkbox">
-    <input type="checkbox" id="toggle-checkbox" onchange="toggleTheme()" />
-    <span class="slider"></span>
-    <span class="mode-label" id="mode-label">🌙 Dark Mode</span>
-  </label>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Day</th>
-          <th>Jacob</th>
-          <th>Jalyna</th>
-          <th>Josh</th>
-          <th>Jeremy</th>
-        </tr>
-      </thead>
-      <tbody id="chore-body"></tbody>
-    </table>
-  </div>
-
-  <div class="controls" id="reset-section">
-    <button onclick="resetAllTasks()">Reset All Tasks</button>
-  </div>
-
-  <div class="recycling-note">♻️ <strong>Recycling:</strong> Loading next pickup info...</div>
-
-  <div class="garbage-note">
-    🗑️ <strong>Garbage Instructions:</strong> Must be out by 9:00 PM night before pickup. Wi-Fi may be disabled if missed.
-  </div>
-
-  <div style="text-align:center;">
-    <div class="weather-alert">
-      <span class="weather-icon">⛅</span>
-      Loading today's forecast...
-    </div>
-  </div>
-
-  <div style="text-align:center; margin-top:15px;">
-    <a href="https://docs.google.com/gview?url=https://raw.githubusercontent.com/Davidramo113/chores/main/Cleaning_Standards_Guide_Updated.pdf&embedded=true"
-       target="_blank" rel="noopener noreferrer"
-       style="font-size:16px; color:green; display:inline-block;">
-      📄 View Cleaning Standards for Task Approval
-    </a>
-  </div>
-
-  <div class="footer-note">
-    ✅ Complete tasks to regain Wi-Fi privileges. Parent approval required.
-  </div>
-
-  <script>
-    // ----------------------------
-    // Firebase
-    // ----------------------------
-    const firebaseConfig = {
-      apiKey: "AIzaSyA6hkZDTQrqhS6Wcm9z8ADm5It-wck7U8",
-      authDomain: "chores-c86f4.firebaseapp.com",
-      databaseURL: "https://chores-c86f4-default-rtdb.firebaseio.com",
-      projectId: "chores-c86f4",
-      storageBucket: "chores-c86f4.appspot.com",
-      messagingSenderId: "503520134350",
-      appId: "1:503520134350:web:0ce4fc7c3c011eaa0cbc9f"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const isParent = new URLSearchParams(window.location.search).get("user") === "parent";
-
-    let chores = {};
-    let taskStatuses = {};
-    let timers = {};
-
-    // ----------------------------
-    // Theme
-    // ----------------------------
-    function toggleTheme() {
-      document.body.classList.toggle("dark");
-      const dark = document.body.classList.contains("dark");
-      document.getElementById("mode-label").textContent = dark ? "☀️ Light Mode" : "🌙 Dark Mode";
-      document.getElementById("toggle-checkbox").checked = dark;
-    }
-
-    // ----------------------------
-    // Rendering (steady chart, no rotation)
-    // ----------------------------
-    const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-    const KIDS = ["Jacob","Jalyna","Josh","Jeremy"];
-
-    function renderChores() {
-      const tb = document.getElementById("chore-body");
-      const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-      const fullDate  = new Date().toLocaleDateString();
-
-      tb.innerHTML = "";
-
-      DAYS.forEach(day => {
-        const tr = document.createElement("tr");
-        if (day === todayName) tr.classList.add("highlight-row");
-
-        const tdDay = document.createElement("td");
-        tdDay.className = "day-cell";
-        tdDay.textContent = day === todayName ? `${day} (${fullDate})` : day;
-        tr.appendChild(tdDay);
-
-        KIDS.forEach(name => {
-          const td = document.createElement("td");
-          td.style.textAlign = "left";
-
-          const list = chores[day]?.[name] || [];
-
-          if (!list.length) {
-            td.innerHTML = "<span class='muted'>Free</span>";
-          } else {
-            list.forEach((task, i) => {
-              const id = `${name.toLowerCase()}-${day.toLowerCase()}-${i}`;
-
-              const line = document.createElement("div");
-              line.className = "taskline";
-
-              const cb = document.createElement("input");
-              cb.type = "checkbox";
-              cb.id = `${id}-checkbox`;
-              cb.onchange = () => toggleTask(cb, id);
-
-              const text = document.createElement("label");
-              text.className = "tasktext";
-              text.htmlFor = cb.id;
-              text.textContent = task;
-
-              const timer = document.createElement("span");
-              timer.id = `${id}-timer`;
-              timer.className = "timer";
-
-              const status = document.createElement("span");
-              status.id = `${id}-status`;
-              status.className = "status";
-
-              line.appendChild(cb);
-              line.appendChild(text);
-              line.appendChild(timer);
-              line.appendChild(status);
-
-              if (isParent) {
-                const approve = document.createElement("button");
-                approve.id = `${id}-approve`;
-                approve.className = "approve-btn";
-                approve.textContent = "Approve";
-                approve.style.display = "none";
-                approve.onclick = () => approveTask(id);
-
-                const setTimerBtn = document.createElement("button");
-                setTimerBtn.className = "set-timer-btn";
-                setTimerBtn.textContent = "⏱️ Timer";
-                setTimerBtn.onclick = () => setTaskTimer(id);
-
-                line.appendChild(approve);
-                line.appendChild(setTimerBtn);
-              }
-
-              td.appendChild(line);
-            });
-          }
-
-          if (isParent) {
-            const footer = document.createElement("div");
-            footer.className = "cell-footer";
-
-            const editBtn = document.createElement("button");
-            editBtn.className = "edit-btn";
-            editBtn.textContent = "✏️ Edit";
-            editBtn.onclick = () => editTasks(day, name);
-
-            footer.appendChild(editBtn);
-            td.appendChild(footer);
-          }
-
-          tr.appendChild(td);
-        });
-
-        tb.appendChild(tr);
-      });
-
-      // Apply statuses after DOM exists
-      Object.entries(taskStatuses).forEach(([id, st]) => updateTaskUI(id, st));
-      // Timers render separately by interval/updateTimerDisplays
-      updateTimerDisplays();
-    }
-
-    // ----------------------------
-    // Task status workflow
-    // ----------------------------
-    function syncTask(id, status) {
-      db.ref("tasks/" + id).set(status);
-    }
-
-    function updateTaskUI(id, status) {
-      const cb = document.getElementById(`${id}-checkbox`);
-      const st = document.getElementById(`${id}-status`);
-      const btn = document.getElementById(`${id}-approve`);
-      if (!cb || !st) return;
-
-      // reset
-      st.classList.remove("approved");
-
-      if (status === "approved") {
-        cb.checked = true;
-        cb.disabled = true;
-        st.textContent = "✅ Approved";
-        st.classList.add("approved");
-        if (btn) btn.style.display = "none";
-      } else if (status === "pending") {
-        cb.checked = true;
-        cb.disabled = false;
-        st.textContent = "Pending";
-        if (btn && isParent) btn.style.display = "inline-block";
-        else if (btn) btn.style.display = "none";
-      } else {
-        cb.checked = false;
-        cb.disabled = false;
-        st.textContent = "";
-        if (btn) btn.style.display = "none";
-      }
-    }
-
-    function toggleTask(cb, id) {
-      const s = cb.checked ? "pending" : "";
-      syncTask(id, s);
-      updateTaskUI(id, s);
-    }
-
-    function approveTask(id) {
-      if (!isParent) return;
-      syncTask(id, "approved");
-      updateTaskUI(id, "approved");
-    }
-
-    function resetAllTasks() {
-      if (!isParent) return;
-      if (confirm("Reset all tasks?")) {
-        db.ref("tasks").remove();
-        location.reload();
-      }
-    }
-
-    // ----------------------------
-    // Editing chores (parent only)
-    // ----------------------------
-    function editTasks(day, name) {
-      if (!isParent) return;
-      const cur = (chores[day]?.[name] || []).join(", ");
-      const val = prompt(`Edit ${name} on ${day} (comma separated):`, cur);
-      if (val === null) return;
-
-      const arr = val.split(",").map(t => t.trim()).filter(Boolean);
-
-      // Ensure local structure exists (prevents runtime errors)
-      if (!chores[day]) chores[day] = {};
-      chores[day][name] = arr;
-
-      // Write to Firebase (listener will re-render)
-      db.ref(`weeklyChores/${day}/${name}`).set(arr);
-    }
-
-    // ----------------------------
-    // Timers
-    // ----------------------------
-    function formatTimeLeft(ms) {
-      const sec = Math.max(0, Math.floor(ms / 1000));
-      const h = Math.floor(sec / 3600);
-      const m = Math.floor((sec % 3600) / 60);
-      const s = sec % 60;
-      return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
-    }
-
-    function updateTimerDisplays() {
-      const now = Date.now();
-      for (let id in timers) {
-        const span = document.getElementById(`${id}-timer`);
-        if (!span) continue;
-        const left = timers[id] - now;
-        span.textContent = left > 0 ? `⏳ ${formatTimeLeft(left)}` : "";
-      }
-    }
-    setInterval(updateTimerDisplays, 1000);
-
-    function setTaskTimer(id) {
-      if (!isParent) return;
-      const mins = parseInt(prompt("Set timer in minutes:"), 10);
-      if (Number.isFinite(mins) && mins > 0) {
-        db.ref("timers/" + id).set(Date.now() + mins * 60000);
-      } else {
-        alert("Please enter a valid number.");
-      }
-    }
-
-    // ----------------------------
-    // Recycling note (your existing logic)
-    // ----------------------------
-    function updateRecyclingNote() {
-      const note = document.querySelector(".recycling-note");
-      if (!note) return;
-
-      const now = new Date();
-      const wed = new Date(now);
-
-      // Find this week's Wednesday (3 = Wednesday in JS getDay)
-      wed.setDate(wed.getDate() + ((3 - now.getDay() + 7) % 7));
-      wed.setHours(6, 0, 0, 0);
-
-      const pickupDate = now < wed ? wed : new Date(wed.getTime() + 7 * 86400000);
-
-      const start = new Date("2025-05-15T06:00:00");
-      const types = ["Paper/Cardboard", "Plastic/Metal"];
-      const weeks = Math.round((pickupDate - start) / (7 * 86400000));
-      const type = types[weeks % 2];
-
-      const d = pickupDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-      note.innerHTML = `♻️ <strong>Recycling (Tuesday Night – ${d}):</strong> Next pickup for <strong>${type}</strong>.`;
-    }
-
-    // ----------------------------
-    // Weather (today)
-    // ----------------------------
-    const weatherConfig = {
-      latitude: 40.8485,
-      longitude: -73.149,
-      timezone: "America/New_York"
-    };
-
-    const weatherIcons = {
-      0: "☀️", 1: "🌤️", 2: "⛅", 3: "☁️",
-      45: "🌫️", 48: "🌫️",
-      51: "🌦️", 53: "🌦️", 55: "🌧️",
-      56: "🌧️", 57: "🌧️",
-      61: "🌧️", 63: "🌧️", 65: "🌧️",
-      66: "🌧️", 67: "🌧️",
-      71: "❄️", 73: "❄️", 75: "❄️", 77: "❄️",
-      80: "🌦️", 81: "🌦️", 82: "🌦️",
-      95: "⛈️", 96: "⛈️", 99: "⛈️"
-    };
-
-    async function fetchWeatherToday() {
-      try {
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, "0");
-        const dd = String(now.getDate()).padStart(2, "0");
-        const todayStr = `${yyyy}-${mm}-${dd}`;
-
-        const url = new URL("https://api.open-meteo.com/v1/forecast");
-        url.searchParams.set("latitude", weatherConfig.latitude);
-        url.searchParams.set("longitude", weatherConfig.longitude);
-        url.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode");
-        url.searchParams.set("temperature_unit", "fahrenheit");
-        url.searchParams.set("timezone", weatherConfig.timezone);
-        url.searchParams.set("start_date", todayStr);
-        url.searchParams.set("end_date", todayStr);
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        const date = data.daily.time[0];
-        const maxF = Math.round(data.daily.temperature_2m_max[0]);
-        const minF = Math.round(data.daily.temperature_2m_min[0]);
-        const pct  = data.daily.precipitation_probability_max[0];
-        const code = data.daily.weathercode[0];
-
-        const icon = weatherIcons[code] || "🌡️";
-
-        const [y, mo, d] = date.split("-").map(Number);
-        const dLocal = new Date(y, mo - 1, d);
-        const name = dLocal.toLocaleDateString("en-US", { weekday: "long" });
-
-        const c = document.querySelector(".weather-alert");
-        if (c) {
-          c.innerHTML =
-            `<span class="weather-icon">${icon}</span>` +
-            `<strong>${name} (${date}):</strong> ` +
-            `High ${maxF}°F, Low ${minF}°F, ${pct}% precip`;
-        }
-      } catch (e) {
-        console.error("Weather fetch failed:", e);
-      }
-    }
-
-    // ----------------------------
-    // Startup / listeners
-    // ----------------------------
-    document.addEventListener("DOMContentLoaded", () => {
-      // Hide reset button for kids
-      if (!isParent) document.getElementById("reset-section").style.display = "none";
-
-      db.ref("weeklyChores").on("value", snap => {
-        chores = snap.val() || {};
-        renderChores();
-      });
-
-      db.ref("tasks").on("value", snap => {
-        taskStatuses = snap.val() || {};
-        // render is okay (stable) + ensures new tasks get status applied
-        renderChores();
-      });
-
-      db.ref("timers").on("value", snap => {
-        timers = snap.val() || {};
-        updateTimerDisplays();
-      });
-
-      updateRecyclingNote();
-      fetchWeatherToday();
-    });
-  </script>
-</body>
-</html>
+</html>    
